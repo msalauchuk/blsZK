@@ -36,6 +36,10 @@ The earlier Rust library's `BatchProver` remains part of the separately labeled 
 
 ## Milestone 4: Reproducible measurements
 
+The [comparison runner](BENCHMARKS.md) implements the first fixed-two-entry experiment: individual/direct aggregate/ZK paths share exact signed workloads, authorization, and state effects. It separates first/subsequent batch storage, genuine proving commands, peak child-process RSS, calldata, deployment/registration receipts, and optional fresh setup measurements. The default is a pilot with one independent proof per state and five EVM transaction repetitions per path. A [saved reference run](../benchmarks/reference/batch2-prague.json) records two genuine proofs and 30 measured transactions with all three paths accepted.
+
+Larger batch sizes and enough independent samples to characterize latency/throughput remain required for broader research conclusions.
+
 Compare individual on-chain BLS verification, direct aggregate BLS verification, and ZK verification for the same curve, message set, and signature scheme. Include the relevant precompile implementation for the selected chain fork.
 
 Measure witness generation, proof generation, verification, peak memory, proof/calldata sizes, and complete transaction gas. Record hardware, software versions, chain fork, batch sizes, repetitions, and raw results. Separate cold/steady-state storage behavior and deployment cost. Measure fixed proof overhead separately from per-entry calldata/storage costs.

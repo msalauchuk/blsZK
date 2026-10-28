@@ -46,5 +46,19 @@ case "$ACTION" in
         # exact contract/chain/batch context and generates one real proof.
         ./node_modules/.bin/hardhat test integration/BLSBatch.test.js
         ;;
-    *) echo "Usage: bash scripts/bls_batch.sh build|inspect|setup|prove|test [batch.json]" >&2; exit 1 ;;
+    benchmark)
+        BENCH_DIR="$BUILD_DIR/benchmark"
+        mkdir -p "$BENCH_DIR"
+        if [[ "${BLSZK_BENCH_FRESH_SETUP:-0}" == "1" ]] || ! "$BINARY" status --artifacts "$BUILD_DIR"; then
+            python3 "$PROJECT_DIR/scripts/measure_process.py" --metrics "$BENCH_DIR/setup-process.json" --timeout 3600 -- "$BINARY" setup --artifacts "$BUILD_DIR"
+            python3 -c 'import json,sys; json.dump({"mode":"generated","metrics":sys.argv[2]},open(sys.argv[1],"w"))' "$BENCH_DIR/setup.json" "$BENCH_DIR/setup-process.json"
+        else
+            python3 -c 'import json,sys; json.dump({"mode":"reused","metrics":None},open(sys.argv[1],"w"))' "$BENCH_DIR/setup.json"
+        fi
+        copy_verifier
+        cd "$PROJECT_DIR"
+        ./node_modules/.bin/hardhat test test/BLSAggregateVerifier.test.js integration/BLSBatchBaseline.test.js
+        ./node_modules/.bin/hardhat run scripts/benchmark_bls_batch.js
+        ;;
+    *) echo "Usage: bash scripts/bls_batch.sh build|inspect|setup|prove|test|benchmark [batch.json]" >&2; exit 1 ;;
 esac

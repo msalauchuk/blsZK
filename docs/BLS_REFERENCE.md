@@ -19,7 +19,7 @@ The scheme follows the [CFRG BLS draft](https://datatracker.ietf.org/doc/html/dr
 
 Verification checks `e(publicKey, H(message)) = e(G1, signature)`. Both key and signature must have valid canonical encodings, lie in the correct prime-order subgroup, and differ from infinity. The DST is fixed in code; a JSON statement selecting another suite is rejected.
 
-The Rust/direct-Solidity reference APIs below verify individual signatures. The [batch proof backend](BLS_BATCH.md) verifies a Basic aggregate over distinct framed messages; its fixed position bytes enforce that requirement. Shared-message aggregation would require a different, explicitly specified rogue-key defence and suite.
+The Rust CLI below verifies individual signatures. The Solidity reference also exposes `verifyAggregate` for exactly two distinct complete messages; it hashes both on-chain and performs one three-pair pairing check. The [batch proof backend](BLS_BATCH.md) verifies a Basic aggregate over distinct framed messages; its fixed position bytes enforce that requirement. Shared-message aggregation would require a different, explicitly specified rogue-key defence and suite.
 
 ## Native Rust reference
 

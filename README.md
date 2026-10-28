@@ -44,6 +44,7 @@ Run these from the repository root:
 | Command | Purpose |
 | --- | --- |
 | `npm run test:bls:batch` | Full two-entry aggregate-BLS proof and local-EVM workflow |
+| `npm run bench:bls:batch` | Compare individual BLS, aggregate BLS, and ZK with identical batch/state accounting |
 | `npm run bls:batch:inspect` | Compile the batch circuit and report its size |
 | `npm run bls:batch:setup` | Regenerate batch development keys and the generated verifier |
 | `npm run bls:batch:prove -- batch.json` | Prove an aggregate signed for a deployment/batch context |
@@ -79,6 +80,10 @@ This deploys the generated batch verifier and [BLSBatchVerifier](contracts/BLSBa
 Real applications collect context-bound signatures from their signers and authorize the corresponding keys through the deploying owner. The [batch guide](docs/BLS_BATCH.md) describes the prover's JSON input and `submitBatch` arguments. Generated proofs and local transaction measurements are saved under `proofs/gnark/build/batch/`. Regenerating keys requires new proofs and a new verifier deployment.
 
 The batch contract records verified commitments and enforces replay/authorization checks. It does not execute payloads or prove account-state transitions. The earlier [BLSProofVerifier](contracts/BLSProofVerifier.sol) remains a separate stateless one-signature consumer.
+
+### Comparison benchmark
+
+Run `npm run bench:bls:batch` with Python 3.8 or newer installed on macOS/Linux. It generates genuine proofs for the first and subsequent batch states and compares direct individual, direct aggregate, and ZK verification with identical signed data, authorization, and storage effects. It records transaction gas/calldata, proving and full-command time, peak child-process memory, deployments, environment metadata, and raw samples. The [reference two-entry pilot](benchmarks/reference/batch2-prague.md) measured ZK gas about 6.3–6.6% below the implemented direct aggregate baseline. See the [benchmark guide](docs/BENCHMARKS.md) for raw results, repetitions, optional fresh-setup measurements, and interpretation limits. This result does not establish a crossover batch size or throughput.
 
 ## Native and direct BLS references
 
@@ -139,7 +144,7 @@ Generated artifacts live under `proofs/gnark/build/`, `circuits/build/`, and `co
 
 ## Help and documentation
 
-Use the repository's **Issues** tab for questions and reproducible bug reports. Include tool versions, commands, and output. Start with the [batch guide](docs/BLS_BATCH.md), [one-signature proof guide](docs/BLS_PROOF.md), [BLS scheme reference](docs/BLS_REFERENCE.md), [backend rationale](docs/BLS_PROVING.md), and [roadmap](docs/ROADMAP.md).
+Use the repository's **Issues** tab for questions and reproducible bug reports. Include tool versions, commands, and output. Start with the [batch guide](docs/BLS_BATCH.md), [benchmark guide](docs/BENCHMARKS.md), [one-signature proof guide](docs/BLS_PROOF.md), [BLS scheme reference](docs/BLS_REFERENCE.md), [backend rationale](docs/BLS_PROVING.md), and [roadmap](docs/ROADMAP.md).
 
 Upstream references: [gnark](https://github.com/Consensys-Incorporated/gnark), [blst](https://github.com/supranational/blst), [Circom](https://github.com/iden3/circom), [snarkjs](https://github.com/iden3/snarkjs), and [Hardhat 2](https://v2.hardhat.org/hardhat-runner/docs/getting-started).
 

@@ -1,5 +1,5 @@
 const { ethers } = require("ethers");
-const { bls, CIPHERSUITE, fromHex, g1 } = require("./bls");
+const { bls, CIPHERSUITE, fromHex, g1, g2 } = require("./bls");
 
 const BATCH_SIZE = 2;
 const PAYLOAD_BYTES = 25;
@@ -37,9 +37,13 @@ function batchCommitment(statement) {
 // Public, deterministic TEST keys only. Applications must collect signatures
 // from their signers; the prover's input contains no secret keys.
 function createTestBatch(context, payloads = [Buffer.alloc(PAYLOAD_BYTES, 1), Buffer.alloc(PAYLOAD_BYTES, 2)]) {
+  return createTestBatchVectors(context, payloads).statement;
+}
+
+function createTestBatchVectors(context, payloads = [Buffer.alloc(PAYLOAD_BYTES, 1), Buffer.alloc(PAYLOAD_BYTES, 2)]) {
   const statement = { ciphersuite: CIPHERSUITE, ...context, entries: [] };
   let aggregate = bls.G2.ProjectivePoint.ZERO;
-  const points = [], keys = [];
+  const points = [], keys = [], signatures = [];
   for (let i = 0; i < BATCH_SIZE; i++) {
     const secret = 42n + BigInt(i);
     const payload = ethers.hexlify(payloads[i]);
@@ -47,12 +51,14 @@ function createTestBatch(context, payloads = [Buffer.alloc(PAYLOAD_BYTES, 1), Bu
     points.push(point);
     const key = bls.getPublicKey(secret);
     keys.push(key);
-    aggregate = aggregate.add(bls.sign(point, secret));
+    const signature = bls.sign(point, secret);
+    signatures.push(g2(signature));
+    aggregate = aggregate.add(signature);
     statement.entries.push({ publicKey: ethers.hexlify(key), payload });
   }
   if (!bls.verifyBatch(aggregate, points, keys)) throw new Error("Independent aggregate BLS verification failed");
   statement.aggregateSignature = "0x" + bls.Signature.toHex(aggregate);
-  return statement;
+  return { statement, signatures, aggregateSignature: g2(aggregate) };
 }
 
-module.exports = { BATCH_SIZE, PAYLOAD_BYTES, COMMITMENT_DOMAIN, SIGNING_DOMAIN, contextBytes, signingMessage, wireEntries, batchCommitment, createTestBatch };
+module.exports = { BATCH_SIZE, PAYLOAD_BYTES, COMMITMENT_DOMAIN, SIGNING_DOMAIN, contextBytes, signingMessage, wireEntries, batchCommitment, createTestBatch, createTestBatchVectors };

@@ -29,7 +29,8 @@
     "bls:batch:prove": "bash scripts/bls_batch.sh prove",
     "bls:batch:deploy": "hardhat run scripts/deploy_bls_batch.js --network localhost",
     "bls:batch:demo": "hardhat run scripts/demo_bls_batch.js --network localhost",
-    "test:bls:batch": "bash scripts/bls_batch.sh test"
+    "test:bls:batch": "bash scripts/bls_batch.sh test",
+    "bench:bls:batch": "bash scripts/bls_batch.sh benchmark"
   },
   "repository": {
     "type": "git",

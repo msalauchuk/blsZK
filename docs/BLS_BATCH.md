@@ -101,7 +101,7 @@ The deploying account is the immutable owner. It manages `setSignerAuthorization
 
 Anyone can submit a valid authorized batch. The batch ID must equal `nextBatchId`; after successful verification the contract records `batchCommitments[batchId]`, emits `BatchVerified`, and advances the counter. Reverting proof or authorization checks leave both records and the counter unchanged. Replaying a consumed batch, retargeting a proof to another batch number or contract, and replacing submitted entries are rejected.
 
-These are verified batch commitments, not account state roots. The consumer does not execute payloads, maintain balances, prove withdrawals, or implement a complete rollup. Larger/variable batch capacities, transaction semantics, production setup/review, and comparable baseline measurements remain separate work.
+These are verified batch commitments, not account state roots. The consumer does not execute payloads, maintain balances, prove withdrawals, or implement a complete rollup. Larger/variable batch capacities, transaction semantics, and production setup/review remain separate work. The [comparison runner](BENCHMARKS.md) measures direct individual, direct aggregate, and ZK paths for the same current two-entry workload.
 
 ## Observed validation and costs
 
@@ -121,4 +121,4 @@ One development run recorded:
 
 The transaction includes commitment reconstruction, authorization checks, proof verification, counter/commitment storage, and the event. It excludes deployment and prior signer-registration transactions. The first batch starts with a zero batch counter; later batches have different storage costs. Proving time excludes artifact loading, compilation, setup, and Solidity compilation. Raw local measurements are written to `proofs/gnark/build/batch/evm-verification.json`; subsequent runs also record full prover-command time separately.
 
-These are single-run prototype observations. They do not establish BLS gas savings, a crossover batch size, or throughput; comparisons require identical signed messages, workloads, chain rules, and accounting.
+These are historical single-run prototype observations. Use the [comparison benchmark](BENCHMARKS.md) for matching direct/ZK workloads and state accounting. Neither this table nor a two-entry comparison establishes a crossover batch size or throughput.

@@ -1,0 +1,810 @@
+{
+  "schema": "blszk.batch2-comparison.v1",
+  "startedAt": "2026-10-28T17:54:00.019Z",
+  "status": "complete",
+  "plan": {
+    "proofRunsPerState": 1,
+    "gasRunsPerProofAndMethod": 5,
+    "batchSize": 2,
+    "payloadBytes": 25,
+    "signedMessageBytes": 119
+  },
+  "environment": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "27.0.0",
+    "cpuModel": "Apple M1",
+    "logicalCpuCount": 8,
+    "systemMemoryBytes": 8589934592,
+    "node": "v26.12.0",
+    "python": "Python 3.9.6",
+    "go": "go version go1.27.2 darwin/arm64",
+    "hardhat": "2.27.0",
+    "solc": "0.8.20+commit.a1b79de6.Emscripten.clang",
+    "hardfork": "prague",
+    "chainId": "31337",
+    "compilerSettings": {
+      "optimizer": {
+        "enabled": true,
+        "runs": 200,
+        "details": {
+          "yul": true,
+          "yulDetails": {
+            "stackAllocation": true,
+            "optimizerSteps": "dhfoDgvulfnTUtnIf"
+          }
+        }
+      },
+      "viaIR": true,
+      "evmVersion": "paris",
+      "outputSelection": {
+        "*": {
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ],
+          "": [
+            "ast"
+          ]
+        }
+      }
+    },
+    "goWorkers": 4,
+    "goHeapGcTargetBytes": 3221225472,
+    "cachePolicy": "Fresh Go process per proof; circuit/keys reused; normal OS filesystem cache, no forced cache drop",
+    "peakMemoryScope": "Go child process only, measured with getrusage; excludes Node/Python and other applications"
+  },
+  "source": {
+    "gitCommit": "1b3ae1cd796bb2b01e5ba2f07bdd1ea3e961c098",
+    "worktreeDirty": true,
+    "files": {
+      "contracts/BLS12381Verifier.sol": "e73c11cce80c10f6740a88d830664812597b2c988011503e1888f81606ca5ddc",
+      "contracts/BLSBatchVerifier.sol": "a435b4e0dd50e5ea10b00e22012e12e3ff9b173c345793d6f094878ec08f49f1",
+      "contracts/benchmarks/BLSBatchBenchmark.sol": "76f1532225da171fbae436307755810ee0ce8d4c5b6e2c7dd59f768f8ee31d3d",
+      "scripts/benchmark_bls_batch.js": "11c9d28426978d7d10fa1fcbaa8cffa18e1aed38eb6cb4e8854affc81d63d019",
+      "scripts/bls_batch.sh": "bb1cc97fe458cb72a8919f7d4f9513394de356e999d5abca09419d74192b0783",
+      "scripts/measure_process.py": "f1d8682bd4bd21553a41b41de068f3e9a0a80e0900a925ac4e7573e339dc253d",
+      "test/helpers/bls-batch.js": "685714709378d9b15e01d76aa009bace48d7b339cf2fb389f11e7dbac383a616",
+      "hardhat.config.js": "fe5c2ca5ff20e8d7981cd86586cf41dbc8d1c26fc5be9bdf9f84ed0a9e793997",
+      "package-lock.json": "ed3d42957e23a3239f470b05d9ca4a4fa5b878cacd625604123c087002bcbc5d",
+      "proofs/gnark/go.mod": "38a7c7f264eb11bde98d715d4b27e31d0e546bbf11a10f7e1e66f8dfc92e94ed",
+      "proofs/gnark/go.sum": "32f7d31308a809d2f54e01242f147ea04d18ca10335b125f64812a7822e04533"
+    }
+  },
+  "circuit": {
+    "schema": "blszk.gnark-bls12-381.batch2.v1",
+    "payloadBytes": 25,
+    "batchSize": 2,
+    "publicInputCount": 2,
+    "constraints": 3805660,
+    "verifyingKeyHash": "0x9c70fc0aac67c60646f9162ba9ba7e8d51c34bb74553dafcfd3ddc77430209b6",
+    "sourceHash": "0x0b6bee798fb5f9c04e72555249941c97a3d1a7b4193057ca6a375a3f829c0dcd"
+  },
+  "setup": {
+    "mode": "reused",
+    "measured": null
+  },
+  "deployments": [
+    {
+      "contract": "BLSBatchGroth16Verifier",
+      "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+      "gasUsed": "1792370",
+      "codeBytes": 8046
+    },
+    {
+      "contract": "BLS12381Verifier",
+      "address": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+      "gasUsed": "976463",
+      "codeBytes": 4272
+    },
+    {
+      "contract": "BLSBatchBenchmark",
+      "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+      "gasUsed": "1355054",
+      "codeBytes": 5947
+    }
+  ],
+  "signerRegistration": [
+    {
+      "keyHash": "0x7a80ed639f5a6a4e616d0066d43dcbe77629d6488aa273e23542d5159d1a7c9c",
+      "gasUsed": "62416"
+    },
+    {
+      "keyHash": "0xa054bc7f929d54637d3d0b1f21d98146184ca60f9104bf4a1ff90f683e8a58ca",
+      "gasUsed": "62428"
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "first batch (counter 0)",
+      "batchId": "0",
+      "ciphersuite": "BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_NUL_",
+      "commitment": "0x6f19b7b136c2d7525e767eda919928e8df24f5e99006adbdad18493887d50330",
+      "payloads": [
+        "0x01010101010101010101010101010101010101010101010101",
+        "0x02020202020202020202020202020202020202020202020202"
+      ],
+      "publicKeys": [
+        "0x000000000000000000000000000000000ce3b57b791798433fd323753489cac9bca43b98deaafaed91f4cb010730ae1e38b186ccd37a09b8aed62ce23b699c4800000000000000000000000000000000008c346228e4482ec20a2bf7d5a2fe74ebf3c79b912d1b0ba977a873b66f7a9b8b42585a78c0c21d66da6a15767efdb1",
+        "0x000000000000000000000000000000000f81b19ee2e4d4d0ff6384c63bacb785bc05c4fc22e6f553079cc4ff7e0270d458951533458a01d160b22d59a8bd9ab5000000000000000000000000000000000b3b5f8d63b2d39bb00769d6859dcd8ed3cbbc4a02d783863819e32fbac56217753e35dcd591049258c7a12e4be92101"
+      ],
+      "signedMessages": [
+        "0x0244e8adcdfaf353fd57abaac057d1cb513134f31af89eb65fe58a174b14c22b0000000000000000000000000000000000000000000000000000000000007a699fe46736679d2d9a65f0992f2272de9f3c7fa6e00000000000000000020001010101010101010101010101010101010101010101010101",
+        "0x0244e8adcdfaf353fd57abaac057d1cb513134f31af89eb65fe58a174b14c22b0000000000000000000000000000000000000000000000000000000000007a699fe46736679d2d9a65f0992f2272de9f3c7fa6e00000000000000000020102020202020202020202020202020202020202020202020202"
+      ],
+      "aggregateSignature": "0x000000000000000000000000000000001632ca7e5cc1ce378fe4ac7aeb7f59d14b258d982987a2c812e031fb28cde5b77b1461e56e32610b9dea8faf8d8ba34b0000000000000000000000000000000015bf6db1967decc00093d060a2536f55be399f09ca069da3253c60b489cde8d201c30a0203689c739700d8346dbe81ef0000000000000000000000000000000006275890d9f8b7f9b6c338f8b6fc6c65e126d5db99db64cd15f64d806bbb6a500116a035db715656c344910e8c0a76d800000000000000000000000000000000029df92e121d09a8077b134613e7454976828f3f04c1d4300fce9565c97fd221c33a267a4923485509be034a91b35f98",
+      "individualSignatures": [
+        "0x00000000000000000000000000000000075717f6ed1e0dd44ce5b3278d367618f14776e9d2af96549def9512de62e00b010cf644e10a3d2faa72da462e6520ca0000000000000000000000000000000019bf79e3328bb8588a76a35ee0c28167f856196f12b4e687cc2b10084e2f9b36987b48cb291ae87587289e4e64b2f9a100000000000000000000000000000000013b64f599d7c6eb5404008e3ed668d9319eaae686719cf3b5872be8ba3a653c487ae8339ae5d2fc26e94d7a540b7fe00000000000000000000000000000000018925fa2da2dda3477cc2f56824584eb9fa6e887727491e6eb72ef1945295e0223674d7158169e73aacfcf43152e9655",
+        "0x00000000000000000000000000000000070b08dbd6c6bb3443d9b848645f04cddb177044cc0993c3a4669a55d3b0e2a6b3dda28f2be3c737ffdc1c0ef4980fea00000000000000000000000000000000071a6d44ddf21f6027f95ef49817bf8f3064a87b3e113a92264219df9a7ca850b189e426121345817312a6c4163aec2e0000000000000000000000000000000016ced3db61d33cd2f5198d11c0916c0377ee9ca7f9758cc2c0dc2f9cc3c4575b47c1bd2b51413b47a07e864a062d700600000000000000000000000000000000160422d06a159a49af8a5014c612da302f78e063aff49403191a2e70e1de528b00d794a1d30053279c22ddd3ec716055"
+      ],
+      "fixturePreparationAndPreflightMs": 73.22175000000004,
+      "evidenceBytes": {
+        "individual": 512,
+        "aggregate": 256,
+        "zk": 384
+      },
+      "proverRuns": [
+        {
+          "trial": 0,
+          "provingTimeMs": 31074,
+          "proofBytes": 384,
+          "proofHash": "0x315ff7d7783b9e0ce217cd1ff24bb4abca89215f73db71c97bc07de84076a6ac",
+          "command": [
+            "<repo>/proofs/gnark/build/batch/bls-batch",
+            "prove",
+            "--artifacts",
+            "<repo>/proofs/gnark/build/batch",
+            "--input",
+            "<repo>/proofs/gnark/build/batch/benchmark/2026-10-28T17-54-00-019Z/batch-0.input.json",
+            "--output",
+            "<repo>/proofs/gnark/build/batch/benchmark/2026-10-28T17-54-00-019Z/batch-0.proof-0.json"
+          ],
+          "exitCode": 0,
+          "wallTimeMs": 142443.746833,
+          "cpuUserSeconds": 466.283674,
+          "cpuSystemSeconds": 17.038267,
+          "peakRssBytes": 1494630400,
+          "majorPageFaults": 350,
+          "measurement": "getrusage(RUSAGE_CHILDREN); one fresh runner per command",
+          "platform": "darwin"
+        }
+      ],
+      "transactions": [
+        {
+          "method": "individual",
+          "proofTrial": 0,
+          "repeat": 0,
+          "gasUsed": "552570",
+          "calldata": {
+            "bytes": 1348,
+            "zeroBytes": 705,
+            "nonzeroBytes": 643
+          },
+          "calldataHash": "0x88674d6baa4b9eed38fd126f2163ccd0ed962e31dfd2fa79e24f5885d4061b4b",
+          "transactionHash": "0x314d3aa8150036511c571d27901806852b9f49e7232611f9ea6fdf27e15ed5c9",
+          "status": 1
+        },
+        {
+          "method": "individual",
+          "proofTrial": 0,
+          "repeat": 1,
+          "gasUsed": "552570",
+          "calldata": {
+            "bytes": 1348,
+            "zeroBytes": 705,
+            "nonzeroBytes": 643
+          },
+          "calldataHash": "0x88674d6baa4b9eed38fd126f2163ccd0ed962e31dfd2fa79e24f5885d4061b4b",
+          "transactionHash": "0x314d3aa8150036511c571d27901806852b9f49e7232611f9ea6fdf27e15ed5c9",
+          "status": 1
+        },
+        {
+          "method": "individual",
+          "proofTrial": 0,
+          "repeat": 2,
+          "gasUsed": "552570",
+          "calldata": {
+            "bytes": 1348,
+            "zeroBytes": 705,
+            "nonzeroBytes": 643
+          },
+          "calldataHash": "0x88674d6baa4b9eed38fd126f2163ccd0ed962e31dfd2fa79e24f5885d4061b4b",
+          "transactionHash": "0x314d3aa8150036511c571d27901806852b9f49e7232611f9ea6fdf27e15ed5c9",
+          "status": 1
+        },
+        {
+          "method": "individual",
+          "proofTrial": 0,
+          "repeat": 3,
+          "gasUsed": "552570",
+          "calldata": {
+            "bytes": 1348,
+            "zeroBytes": 705,
+            "nonzeroBytes": 643
+          },
+          "calldataHash": "0x88674d6baa4b9eed38fd126f2163ccd0ed962e31dfd2fa79e24f5885d4061b4b",
+          "transactionHash": "0x314d3aa8150036511c571d27901806852b9f49e7232611f9ea6fdf27e15ed5c9",
+          "status": 1
+        },
+        {
+          "method": "individual",
+          "proofTrial": 0,
+          "repeat": 4,
+          "gasUsed": "552570",
+          "calldata": {
+            "bytes": 1348,
+            "zeroBytes": 705,
+            "nonzeroBytes": 643
+          },
+          "calldataHash": "0x88674d6baa4b9eed38fd126f2163ccd0ed962e31dfd2fa79e24f5885d4061b4b",
+          "transactionHash": "0x314d3aa8150036511c571d27901806852b9f49e7232611f9ea6fdf27e15ed5c9",
+          "status": 1
+        },
+        {
+          "method": "aggregate",
+          "proofTrial": 0,
+          "repeat": 0,
+          "gasUsed": "476959",
+          "calldata": {
+            "bytes": 996,
+            "zeroBytes": 548,
+            "nonzeroBytes": 448
+          },
+          "calldataHash": "0x42d14c7ade1a5462217a0b5ada0b9fd25cf951599ee27f67e5875b887f6bb789",
+          "transactionHash": "0xa2da03d0e49a3b200647ec64804006b6b0e9f7bf854b480f871a157241ddb636",
+          "status": 1
+        },
+        {
+          "method": "aggregate",
+          "proofTrial": 0,
+          "repeat": 1,
+          "gasUsed": "476959",
+          "calldata": {
+            "bytes": 996,
+            "zeroBytes": 548,
+            "nonzeroBytes": 448
+          },
+          "calldataHash": "0x42d14c7ade1a5462217a0b5ada0b9fd25cf951599ee27f67e5875b887f6bb789",
+          "transactionHash": "0xa2da03d0e49a3b200647ec64804006b6b0e9f7bf854b480f871a157241ddb636",
+          "status": 1
+        },
+        {
+          "method": "aggregate",
+          "proofTrial": 0,
+          "repeat": 2,
+          "gasUsed": "476959",
+          "calldata": {
+            "bytes": 996,
+            "zeroBytes": 548,
+            "nonzeroBytes": 448
+          },
+          "calldataHash": "0x42d14c7ade1a5462217a0b5ada0b9fd25cf951599ee27f67e5875b887f6bb789",
+          "transactionHash": "0xa2da03d0e49a3b200647ec64804006b6b0e9f7bf854b480f871a157241ddb636",
+          "status": 1
+        },
+        {
+          "method": "aggregate",
+          "proofTrial": 0,
+          "repeat": 3,
+          "gasUsed": "476959",
+          "calldata": {
+            "bytes": 996,
+            "zeroBytes": 548,
+            "nonzeroBytes": 448
+          },
+          "calldataHash": "0x42d14c7ade1a5462217a0b5ada0b9fd25cf951599ee27f67e5875b887f6bb789",
+          "transactionHash": "0xa2da03d0e49a3b200647ec64804006b6b0e9f7bf854b480f871a157241ddb636",
+          "status": 1
+        },
+        {
+          "method": "aggregate",
+          "proofTrial": 0,
+          "repeat": 4,
+          "gasUsed": "476959",
+          "calldata": {
+            "bytes": 996,
+            "zeroBytes": 548,
+            "nonzeroBytes": 448
+          },
+          "calldataHash": "0x42d14c7ade1a5462217a0b5ada0b9fd25cf951599ee27f67e5875b887f6bb789",
+          "transactionHash": "0xa2da03d0e49a3b200647ec64804006b6b0e9f7bf854b480f871a157241ddb636",
+          "status": 1
+        },
+        {
+          "method": "zk",
+          "proofTrial": 0,
+          "repeat": 0,
+          "gasUsed": "446691",
+          "calldata": {
+            "bytes": 1124,
+            "zeroBytes": 484,
+            "nonzeroBytes": 640
+          },
+          "calldataHash": "0x520284da9c1d7dc5fae393be8e156c3cca7820409ed7350036e7d1c8e0d2d269",
+          "transactionHash": "0x7e92045fe6cf9795e1fc70544ce11c9631adcafc88eb0f1cd883baae5df934f7",
+          "status": 1
+        },
+        {
+          "method": "zk",
+          "proofTrial": 0,
+          "repeat": 1,
+          "gasUsed": "446691",
+          "calldata": {
+            "bytes": 1124,
+            "zeroBytes": 484,
+            "nonzeroBytes": 640
+          },
+          "calldataHash": "0x520284da9c1d7dc5fae393be8e156c3cca7820409ed7350036e7d1c8e0d2d269",
+          "transactionHash": "0x7e92045fe6cf9795e1fc70544ce11c9631adcafc88eb0f1cd883baae5df934f7",
+          "status": 1
+        },
+        {
+          "method": "zk",
+          "proofTrial": 0,
+          "repeat": 2,
+          "gasUsed": "446691",
+          "calldata": {
+            "bytes": 1124,
+            "zeroBytes": 484,
+            "nonzeroBytes": 640
+          },
+          "calldataHash": "0x520284da9c1d7dc5fae393be8e156c3cca7820409ed7350036e7d1c8e0d2d269",
+          "transactionHash": "0x7e92045fe6cf9795e1fc70544ce11c9631adcafc88eb0f1cd883baae5df934f7",
+          "status": 1
+        },
+        {
+          "method": "zk",
+          "proofTrial": 0,
+          "repeat": 3,
+          "gasUsed": "446691",
+          "calldata": {
+            "bytes": 1124,
+            "zeroBytes": 484,
+            "nonzeroBytes": 640
+          },
+          "calldataHash": "0x520284da9c1d7dc5fae393be8e156c3cca7820409ed7350036e7d1c8e0d2d269",
+          "transactionHash": "0x7e92045fe6cf9795e1fc70544ce11c9631adcafc88eb0f1cd883baae5df934f7",
+          "status": 1
+        },
+        {
+          "method": "zk",
+          "proofTrial": 0,
+          "repeat": 4,
+          "gasUsed": "446691",
+          "calldata": {
+            "bytes": 1124,
+            "zeroBytes": 484,
+            "nonzeroBytes": 640
+          },
+          "calldataHash": "0x520284da9c1d7dc5fae393be8e156c3cca7820409ed7350036e7d1c8e0d2d269",
+          "transactionHash": "0x7e92045fe6cf9795e1fc70544ce11c9631adcafc88eb0f1cd883baae5df934f7",
+          "status": 1
+        }
+      ],
+      "summary": {
+        "individual": {
+          "gas": {
+            "samples": 5,
+            "min": 552570,
+            "max": 552570,
+            "mean": 552570,
+            "median": 552570
+          },
+          "calldataBytes": {
+            "samples": 5,
+            "min": 1348,
+            "max": 1348,
+            "mean": 1348,
+            "median": 1348
+          }
+        },
+        "aggregate": {
+          "gas": {
+            "samples": 5,
+            "min": 476959,
+            "max": 476959,
+            "mean": 476959,
+            "median": 476959
+          },
+          "calldataBytes": {
+            "samples": 5,
+            "min": 996,
+            "max": 996,
+            "mean": 996,
+            "median": 996
+          }
+        },
+        "zk": {
+          "gas": {
+            "samples": 5,
+            "min": 446691,
+            "max": 446691,
+            "mean": 446691,
+            "median": 446691
+          },
+          "calldataBytes": {
+            "samples": 5,
+            "min": 1124,
+            "max": 1124,
+            "mean": 1124,
+            "median": 1124
+          }
+        }
+      },
+      "provingSummary": {
+        "provingTimeMs": {
+          "samples": 1,
+          "min": 31074,
+          "max": 31074,
+          "mean": 31074,
+          "median": 31074
+        },
+        "commandWallTimeMs": {
+          "samples": 1,
+          "min": 142443.746833,
+          "max": 142443.746833,
+          "mean": 142443.746833,
+          "median": 142443.746833
+        },
+        "peakRssBytes": {
+          "samples": 1,
+          "min": 1494630400,
+          "max": 1494630400,
+          "mean": 1494630400,
+          "median": 1494630400
+        }
+      }
+    },
+    {
+      "name": "subsequent batch (counter 1)",
+      "batchId": "1",
+      "ciphersuite": "BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_NUL_",
+      "commitment": "0xc2b05cf0d818afbc74ebe80c3e38915c4e18c153b77187385abe689d2ec70bc5",
+      "payloads": [
+        "0x01010101010101010101010101010101010101010101010101",
+        "0x02020202020202020202020202020202020202020202020202"
+      ],
+      "publicKeys": [
+        "0x000000000000000000000000000000000ce3b57b791798433fd323753489cac9bca43b98deaafaed91f4cb010730ae1e38b186ccd37a09b8aed62ce23b699c4800000000000000000000000000000000008c346228e4482ec20a2bf7d5a2fe74ebf3c79b912d1b0ba977a873b66f7a9b8b42585a78c0c21d66da6a15767efdb1",
+        "0x000000000000000000000000000000000f81b19ee2e4d4d0ff6384c63bacb785bc05c4fc22e6f553079cc4ff7e0270d458951533458a01d160b22d59a8bd9ab5000000000000000000000000000000000b3b5f8d63b2d39bb00769d6859dcd8ed3cbbc4a02d783863819e32fbac56217753e35dcd591049258c7a12e4be92101"
+      ],
+      "signedMessages": [
+        "0x0244e8adcdfaf353fd57abaac057d1cb513134f31af89eb65fe58a174b14c22b0000000000000000000000000000000000000000000000000000000000007a699fe46736679d2d9a65f0992f2272de9f3c7fa6e00000000000000001020001010101010101010101010101010101010101010101010101",
+        "0x0244e8adcdfaf353fd57abaac057d1cb513134f31af89eb65fe58a174b14c22b0000000000000000000000000000000000000000000000000000000000007a699fe46736679d2d9a65f0992f2272de9f3c7fa6e00000000000000001020102020202020202020202020202020202020202020202020202"
+      ],
+      "aggregateSignature": "0x00000000000000000000000000000000173aeb2909536dc246f1bbe3bc6b3cafba2f01c0210f501a0798953c52a26c708507751b573b4b356de789e635246e63000000000000000000000000000000001195e5ffd99712fffd647387384117337cbf129b862486a960ea9d242181eb7604bf5907878aa74a8e205b88fd46777c0000000000000000000000000000000015acaf5f30817c34327158f0d2e2c0799e136f0755a22e05bf1cf1ba8a378219b7d11928ae5d34d4052ca1b303d6ccd4000000000000000000000000000000000c6ba6f6392fd52a1f996a4333568a28b4e85109f646491ec514496202e882e8b24328f556bcbefa11c07f981629be79",
+      "individualSignatures": [
+        "0x0000000000000000000000000000000013e25313567f98b818f30a03bda9392078dc6764e995d604ce3fbff40bcde665478306e440b6c440af3b53744a8dc08f0000000000000000000000000000000001c234a0a67f929b8fd710e51022f6341e7ae52dd041c7cd0016c88d72c1f3e250d4e685be33cecb0d97f18b170b6d87000000000000000000000000000000000dd445d44b8d48df8b824a903b3108e84d2538794c37b5b6e259b7053d582b8ee01b79609950bdc0afb52e9ca5b142360000000000000000000000000000000003aaaab1fcebc300cdf0aec1efa438624bb5cf006239463d9ad4b285e790bc75d0c37cf343430314cc33f23d11f12b5f",
+        "0x0000000000000000000000000000000019505c30abd39eca320b06d92c36b11d1c4c72e7f4f35344a1603710a1678cb1597771ac574763f8e020e999ad7a03e700000000000000000000000000000000081c0f99ea675bde2456626d48b7187836dceb2b596870a20dc102f90b505a4615ad538a49f75c4db2991f3884638a2a0000000000000000000000000000000016c69e53ff17f52933c518376659790c1a1f3bd23ead44e56fa7dea5c81451da59f56f9384902c797af02303f8574e7f000000000000000000000000000000000ef95deb1453382b26e0990d9179fe008fa777ddbb6bb8446e4e55b8bf84a848138eb71a0fe6fe6aba9fbfb69fe4ab63"
+      ],
+      "fixturePreparationAndPreflightMs": 75.44087500000023,
+      "evidenceBytes": {
+        "individual": 512,
+        "aggregate": 256,
+        "zk": 384
+      },
+      "proverRuns": [
+        {
+          "trial": 0,
+          "provingTimeMs": 32563,
+          "proofBytes": 384,
+          "proofHash": "0x665fa6d799aba17e9bcf64aa9ba3390c46b3f4c8f70cf87ffeca773eb80ea481",
+          "command": [
+            "<repo>/proofs/gnark/build/batch/bls-batch",
+            "prove",
+            "--artifacts",
+            "<repo>/proofs/gnark/build/batch",
+            "--input",
+            "<repo>/proofs/gnark/build/batch/benchmark/2026-10-28T17-54-00-019Z/batch-1.input.json",
+            "--output",
+            "<repo>/proofs/gnark/build/batch/benchmark/2026-10-28T17-54-00-019Z/batch-1.proof-0.json"
+          ],
+          "exitCode": 0,
+          "wallTimeMs": 144079.80941599997,
+          "cpuUserSeconds": 479.935924,
+          "cpuSystemSeconds": 18.00629,
+          "peakRssBytes": 2056454144,
+          "majorPageFaults": 536,
+          "measurement": "getrusage(RUSAGE_CHILDREN); one fresh runner per command",
+          "platform": "darwin"
+        }
+      ],
+      "transactions": [
+        {
+          "method": "individual",
+          "proofTrial": 0,
+          "repeat": 0,
+          "gasUsed": "535470",
+          "calldata": {
+            "bytes": 1348,
+            "zeroBytes": 705,
+            "nonzeroBytes": 643
+          },
+          "calldataHash": "0xbec1b1236c5304e7cffae55992bf2d595fbd2b27c3ac0a48171e760215312b92",
+          "transactionHash": "0xf9cb6f46d391f1a924d2d7e48a7ea4c3d0f0ad6ac3a946f2b9c9824d0eb548c2",
+          "status": 1
+        },
+        {
+          "method": "individual",
+          "proofTrial": 0,
+          "repeat": 1,
+          "gasUsed": "535470",
+          "calldata": {
+            "bytes": 1348,
+            "zeroBytes": 705,
+            "nonzeroBytes": 643
+          },
+          "calldataHash": "0xbec1b1236c5304e7cffae55992bf2d595fbd2b27c3ac0a48171e760215312b92",
+          "transactionHash": "0xf9cb6f46d391f1a924d2d7e48a7ea4c3d0f0ad6ac3a946f2b9c9824d0eb548c2",
+          "status": 1
+        },
+        {
+          "method": "individual",
+          "proofTrial": 0,
+          "repeat": 2,
+          "gasUsed": "535470",
+          "calldata": {
+            "bytes": 1348,
+            "zeroBytes": 705,
+            "nonzeroBytes": 643
+          },
+          "calldataHash": "0xbec1b1236c5304e7cffae55992bf2d595fbd2b27c3ac0a48171e760215312b92",
+          "transactionHash": "0xf9cb6f46d391f1a924d2d7e48a7ea4c3d0f0ad6ac3a946f2b9c9824d0eb548c2",
+          "status": 1
+        },
+        {
+          "method": "individual",
+          "proofTrial": 0,
+          "repeat": 3,
+          "gasUsed": "535470",
+          "calldata": {
+            "bytes": 1348,
+            "zeroBytes": 705,
+            "nonzeroBytes": 643
+          },
+          "calldataHash": "0xbec1b1236c5304e7cffae55992bf2d595fbd2b27c3ac0a48171e760215312b92",
+          "transactionHash": "0xf9cb6f46d391f1a924d2d7e48a7ea4c3d0f0ad6ac3a946f2b9c9824d0eb548c2",
+          "status": 1
+        },
+        {
+          "method": "individual",
+          "proofTrial": 0,
+          "repeat": 4,
+          "gasUsed": "535470",
+          "calldata": {
+            "bytes": 1348,
+            "zeroBytes": 705,
+            "nonzeroBytes": 643
+          },
+          "calldataHash": "0xbec1b1236c5304e7cffae55992bf2d595fbd2b27c3ac0a48171e760215312b92",
+          "transactionHash": "0xf9cb6f46d391f1a924d2d7e48a7ea4c3d0f0ad6ac3a946f2b9c9824d0eb548c2",
+          "status": 1
+        },
+        {
+          "method": "aggregate",
+          "proofTrial": 0,
+          "repeat": 0,
+          "gasUsed": "459895",
+          "calldata": {
+            "bytes": 996,
+            "zeroBytes": 545,
+            "nonzeroBytes": 451
+          },
+          "calldataHash": "0xfa5d7613774309806682d9217111c66debc1c79620a8ad46a8761a5fc304fc58",
+          "transactionHash": "0x05523b2dba62bb1709f2f19c6b0972c767d70337c0fb01ae0d5b7730269d8afb",
+          "status": 1
+        },
+        {
+          "method": "aggregate",
+          "proofTrial": 0,
+          "repeat": 1,
+          "gasUsed": "459895",
+          "calldata": {
+            "bytes": 996,
+            "zeroBytes": 545,
+            "nonzeroBytes": 451
+          },
+          "calldataHash": "0xfa5d7613774309806682d9217111c66debc1c79620a8ad46a8761a5fc304fc58",
+          "transactionHash": "0x05523b2dba62bb1709f2f19c6b0972c767d70337c0fb01ae0d5b7730269d8afb",
+          "status": 1
+        },
+        {
+          "method": "aggregate",
+          "proofTrial": 0,
+          "repeat": 2,
+          "gasUsed": "459895",
+          "calldata": {
+            "bytes": 996,
+            "zeroBytes": 545,
+            "nonzeroBytes": 451
+          },
+          "calldataHash": "0xfa5d7613774309806682d9217111c66debc1c79620a8ad46a8761a5fc304fc58",
+          "transactionHash": "0x05523b2dba62bb1709f2f19c6b0972c767d70337c0fb01ae0d5b7730269d8afb",
+          "status": 1
+        },
+        {
+          "method": "aggregate",
+          "proofTrial": 0,
+          "repeat": 3,
+          "gasUsed": "459895",
+          "calldata": {
+            "bytes": 996,
+            "zeroBytes": 545,
+            "nonzeroBytes": 451
+          },
+          "calldataHash": "0xfa5d7613774309806682d9217111c66debc1c79620a8ad46a8761a5fc304fc58",
+          "transactionHash": "0x05523b2dba62bb1709f2f19c6b0972c767d70337c0fb01ae0d5b7730269d8afb",
+          "status": 1
+        },
+        {
+          "method": "aggregate",
+          "proofTrial": 0,
+          "repeat": 4,
+          "gasUsed": "459895",
+          "calldata": {
+            "bytes": 996,
+            "zeroBytes": 545,
+            "nonzeroBytes": 451
+          },
+          "calldataHash": "0xfa5d7613774309806682d9217111c66debc1c79620a8ad46a8761a5fc304fc58",
+          "transactionHash": "0x05523b2dba62bb1709f2f19c6b0972c767d70337c0fb01ae0d5b7730269d8afb",
+          "status": 1
+        },
+        {
+          "method": "zk",
+          "proofTrial": 0,
+          "repeat": 0,
+          "gasUsed": "429579",
+          "calldata": {
+            "bytes": 1124,
+            "zeroBytes": 485,
+            "nonzeroBytes": 639
+          },
+          "calldataHash": "0xf36ac6f3b341bcda6943417160bbd353e9fd5a15c60ed7e2e6981986ad534c90",
+          "transactionHash": "0x5aeffbeb0dc8a3ba2103e42d42a39ba65c908e2e3944f60a0a536a334b9a86a4",
+          "status": 1
+        },
+        {
+          "method": "zk",
+          "proofTrial": 0,
+          "repeat": 1,
+          "gasUsed": "429579",
+          "calldata": {
+            "bytes": 1124,
+            "zeroBytes": 485,
+            "nonzeroBytes": 639
+          },
+          "calldataHash": "0xf36ac6f3b341bcda6943417160bbd353e9fd5a15c60ed7e2e6981986ad534c90",
+          "transactionHash": "0x5aeffbeb0dc8a3ba2103e42d42a39ba65c908e2e3944f60a0a536a334b9a86a4",
+          "status": 1
+        },
+        {
+          "method": "zk",
+          "proofTrial": 0,
+          "repeat": 2,
+          "gasUsed": "429579",
+          "calldata": {
+            "bytes": 1124,
+            "zeroBytes": 485,
+            "nonzeroBytes": 639
+          },
+          "calldataHash": "0xf36ac6f3b341bcda6943417160bbd353e9fd5a15c60ed7e2e6981986ad534c90",
+          "transactionHash": "0x5aeffbeb0dc8a3ba2103e42d42a39ba65c908e2e3944f60a0a536a334b9a86a4",
+          "status": 1
+        },
+        {
+          "method": "zk",
+          "proofTrial": 0,
+          "repeat": 3,
+          "gasUsed": "429579",
+          "calldata": {
+            "bytes": 1124,
+            "zeroBytes": 485,
+            "nonzeroBytes": 639
+          },
+          "calldataHash": "0xf36ac6f3b341bcda6943417160bbd353e9fd5a15c60ed7e2e6981986ad534c90",
+          "transactionHash": "0x5aeffbeb0dc8a3ba2103e42d42a39ba65c908e2e3944f60a0a536a334b9a86a4",
+          "status": 1
+        },
+        {
+          "method": "zk",
+          "proofTrial": 0,
+          "repeat": 4,
+          "gasUsed": "429579",
+          "calldata": {
+            "bytes": 1124,
+            "zeroBytes": 485,
+            "nonzeroBytes": 639
+          },
+          "calldataHash": "0xf36ac6f3b341bcda6943417160bbd353e9fd5a15c60ed7e2e6981986ad534c90",
+          "transactionHash": "0x5aeffbeb0dc8a3ba2103e42d42a39ba65c908e2e3944f60a0a536a334b9a86a4",
+          "status": 1
+        }
+      ],
+      "summary": {
+        "individual": {
+          "gas": {
+            "samples": 5,
+            "min": 535470,
+            "max": 535470,
+            "mean": 535470,
+            "median": 535470
+          },
+          "calldataBytes": {
+            "samples": 5,
+            "min": 1348,
+            "max": 1348,
+            "mean": 1348,
+            "median": 1348
+          }
+        },
+        "aggregate": {
+          "gas": {
+            "samples": 5,
+            "min": 459895,
+            "max": 459895,
+            "mean": 459895,
+            "median": 459895
+          },
+          "calldataBytes": {
+            "samples": 5,
+            "min": 996,
+            "max": 996,
+            "mean": 996,
+            "median": 996
+          }
+        },
+        "zk": {
+          "gas": {
+            "samples": 5,
+            "min": 429579,
+            "max": 429579,
+            "mean": 429579,
+            "median": 429579
+          },
+          "calldataBytes": {
+            "samples": 5,
+            "min": 1124,
+            "max": 1124,
+            "mean": 1124,
+            "median": 1124
+          }
+        }
+      },
+      "provingSummary": {
+        "provingTimeMs": {
+          "samples": 1,
+          "min": 32563,
+          "max": 32563,
+          "mean": 32563,
+          "median": 32563
+        },
+        "commandWallTimeMs": {
+          "samples": 1,
+          "min": 144079.80941599997,
+          "max": 144079.80941599997,
+          "mean": 144079.80941599997,
+          "median": 144079.80941599997
+        },
+        "peakRssBytes": {
+          "samples": 1,
+          "min": 2056454144,
+          "max": 2056454144,
+          "mean": 2056454144,
+          "median": 2056454144
+        }
+      }
+    }
+  ],
+  "consumer": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+  "steadyStateBootstrap": {
+    "batchId": "0",
+    "commitment": "0x6f19b7b136c2d7525e767eda919928e8df24f5e99006adbdad18493887d50330",
+    "gasUsed": "446691",
+    "transactionHash": "0x7e92045fe6cf9795e1fc70544ce11c9631adcafc88eb0f1cd883baae5df934f7"
+  },
+  "completedAt": "2026-10-28T17:58:48.247Z"
+}

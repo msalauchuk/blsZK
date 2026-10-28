@@ -49,6 +49,12 @@ contract BLSBatchVerifier {
     function signingMessage(uint64 batchId, uint8 position, bytes calldata payload)
         external view returns (bytes memory)
     {
+        return _signingMessage(batchId, position, payload);
+    }
+
+    function _signingMessage(uint64 batchId, uint8 position, bytes calldata payload)
+        internal view returns (bytes memory)
+    {
         if (position >= BATCH_SIZE || payload.length != PAYLOAD_BYTES) revert InvalidEntry();
         return abi.encodePacked(SIGNING_DOMAIN, block.chainid, address(this), batchId, BATCH_SIZE, position, payload);
     }
@@ -71,15 +77,27 @@ contract BLSBatchVerifier {
     function submitBatch(uint64 batchId, bytes[2] calldata publicKeys, bytes[2] calldata payloads, bytes calldata proof)
         external
     {
-        if (batchId != nextBatchId) revert InvalidBatchId();
-        bytes32 commitment = batchCommitment(batchId, publicKeys, payloads);
-        for (uint256 i = 0; i < BATCH_SIZE; i++) {
-            if (!authorizedSigner[sha256(publicKeys[i])]) revert UnauthorizedSigner();
-        }
+        bytes32 commitment = _prepareBatch(batchId, publicKeys, payloads);
         uint256[2] memory inputs;
         inputs[0] = uint256(commitment) >> 128;
         inputs[1] = uint256(commitment) & type(uint128).max;
         verifier.verifyProof(proof, inputs);
+        _acceptBatch(batchId, commitment);
+    }
+
+    /// @dev Shared by the benchmark's direct verification paths so authorization,
+    /// framing, commitment and storage semantics remain identical to the ZK path.
+    function _prepareBatch(uint64 batchId, bytes[2] calldata publicKeys, bytes[2] calldata payloads)
+        internal view returns (bytes32 commitment)
+    {
+        if (batchId != nextBatchId) revert InvalidBatchId();
+        commitment = batchCommitment(batchId, publicKeys, payloads);
+        for (uint256 i = 0; i < BATCH_SIZE; i++) {
+            if (!authorizedSigner[sha256(publicKeys[i])]) revert UnauthorizedSigner();
+        }
+    }
+
+    function _acceptBatch(uint64 batchId, bytes32 commitment) internal {
         batchCommitments[batchId] = commitment;
         nextBatchId = batchId + 1;
         emit BatchVerified(batchId, commitment, BATCH_SIZE);

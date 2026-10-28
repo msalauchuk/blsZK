@@ -35,6 +35,31 @@ contract BLS12381Verifier {
         return success && result.length == 32 && abi.decode(result, (uint256)) == 1;
     }
 
+    /// @notice Basic aggregate verification for exactly two DISTINCT messages.
+    /// @dev Hashes both messages on-chain and checks one three-pair pairing.
+    /// Pairing validation applies to each supplied point, not just their sum.
+    function verifyAggregate(
+        bytes[2] calldata messages,
+        bytes[2] calldata publicKeys,
+        bytes calldata signature
+    ) external view returns (bool) {
+        if (signature.length != 256 || _isZero(signature)) return false;
+        // Basic/NUL requires distinct complete signed messages. The batch
+        // consumer's position framing guarantees this, and the standalone API
+        // enforces it for arbitrary callers too.
+        if (keccak256(messages[0]) == keccak256(messages[1])) return false;
+        bytes memory pairs;
+        for (uint256 i = 0; i < 2; i++) {
+            if (publicKeys[i].length != 128 || _isZero(publicKeys[i])) return false;
+            pairs = abi.encodePacked(pairs, publicKeys[i], _hashToG2(messages[i]));
+        }
+        // EIP-2537: 37,700 + 32,600 * 3 = 135,500 precompile gas.
+        (bool success, bytes memory result) = address(0x0f).staticcall{gas: 200_000}(
+            abi.encodePacked(pairs, NEGATIVE_G1, signature)
+        );
+        return success && result.length == 32 && abi.decode(result, (uint256)) == 1;
+    }
+
     /// @notice RFC 9380 hash-to-G2 with this contract's fixed BLS signature DST.
     /// @dev Exposed to test interoperability; callers cannot supply a hash to verify().
     function hashToG2(bytes calldata message) external view returns (bytes memory) {
