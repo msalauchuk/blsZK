@@ -3,6 +3,19 @@ require("hardhat-gas-reporter");
 require("solidity-coverage");
 require("dotenv").config();
 
+// Pin solc through package-lock.json instead of downloading it at compile time.
+const { subtask } = require("hardhat/config");
+const { TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD } = require("hardhat/builtin-tasks/task-names");
+subtask(TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD).setAction(async ({ solcVersion }, _hre, runSuper) => {
+    if (solcVersion !== "0.8.20") return runSuper();
+    return {
+        compilerPath: require.resolve("solc/soljson.js"),
+        isSolcJs: true,
+        version: solcVersion,
+        longVersion: require("solc").version(),
+    };
+});
+
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
     solidity: {

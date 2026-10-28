@@ -1,0 +1,73 @@
+{
+  "name": "zk-rollup-bls",
+  "version": "1.0.0",
+  "description": "Experimental BLS validity-proof project with a working Groth16 Poseidon demo pipeline",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "test:verbose": "hardhat test --verbose",
+    "deploy": "hardhat run scripts/deploy.js --network localhost",
+    "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia",
+    "node": "hardhat node",
+    "clean": "hardhat clean && rm -rf cache artifacts",
+    "circuit:compile": "bash scripts/compile.sh",
+    "circuit:prove": "bash scripts/generate_test_proof.sh",
+    "prover:build": "cargo build --locked --release",
+    "prover:test": "cargo test --locked",
+    "prover:bench": "cargo run --locked --release --bin bls-prover -- benchmark -i 10",
+    "test:proof": "npm run circuit:compile && npm run circuit:prove && cargo build --locked && hardhat test integration/ProofPipeline.test.js",
+    "full:setup": "npm run circuit:compile && npm run prover:build && npm run compile",
+    "coverage": "hardhat coverage"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/msalauchuk/blsZK"
+  },
+  "keywords": [
+    "ethereum",
+    "rollup",
+    "zk-rollup",
+    "zero-knowledge",
+    "BLS",
+    "groth16",
+    "layer2",
+    "blockchain",
+    "cryptography",
+    "snark"
+  ],
+  "author": "ZK-Rollup",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
+    "@nomicfoundation/hardhat-ethers": "^3.0.0",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.10",
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.0",
+    "@typechain/ethers-v6": "^0.5.0",
+    "@typechain/hardhat": "^9.0.0",
+    "@types/chai": "^4.2.0",
+    "@types/mocha": "^10.0.0",
+    "@types/node": ">=18.0.0",
+    "chai": "^4.3.10",
+    "circom2": "0.2.23",
+    "circomlibjs": "0.1.7",
+    "solc": "0.8.20",
+    "ethers": "^6.9.0",
+    "hardhat": "^2.19.2",
+    "hardhat-gas-reporter": "^1.0.9",
+    "solidity-coverage": "^0.8.5",
+    "ts-node": ">=8.0.0",
+    "typechain": "^8.3.0",
+    "typescript": ">=4.5.0"
+  },
+  "dependencies": {
+    "circomlib": "^2.0.5",
+    "dotenv": "^16.3.1",
+    "snarkjs": "^0.7.2"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=9.0.0"
+  },
+  "private": true
+}

@@ -1,5 +1,7 @@
 pragma circom 2.0.0;
 
+// DEMO ONLY: no BLS curve operations, hash-to-curve, or signature aggregation.
+
 /*
  * BLS Signature Verification Circuit (Simplified)
  *
@@ -107,6 +109,8 @@ template BLSVerifyComplete() {
     verify.signatureY <== signatureY;
 
     isValid <== verify.isValid;
+    // Enforce the demo relation. This is still NOT BLS verification.
+    isValid === 1;
 }
 
 // Entry point del circuito

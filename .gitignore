@@ -5,7 +5,6 @@ cache/
 artifacts/
 deployments/
 .env
-*.json
 *.log
 
 
@@ -41,4 +40,9 @@ typechain-types/
 /circuits/**/*.sym
 /circuits/**/*.wasm
 /circuits/**/witness.wtns
-/circuits/**/*.json
+/circuits/test_input.json
+/circuits/build/
+/contracts/generated/
+/coverage/
+/coverage.json
+/gas-report.txt

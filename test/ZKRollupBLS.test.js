@@ -10,7 +10,7 @@ const { ethers } = require("hardhat");
  * - Gestione dello stato L2
  * - Analisi gas
  */
-describe("ZKRollupBLS", function () {
+describe("ZKRollupBLS (mock bookkeeping)", function () {
     let zkContract;
     let mockVerifier;
     let deployer, sequencer, user1, user2;
@@ -38,8 +38,6 @@ describe("ZKRollupBLS", function () {
         zkContract = await ZKRollupBLS.deploy(sequencer.address, verifierAddress);
         await zkContract.waitForDeployment();
 
-        console.log("    Verifier:", verifierAddress);
-        console.log("    ZKRollupBLS:", await zkContract.getAddress());
     });
 
     describe("Deployment", function () {
@@ -288,12 +286,12 @@ describe("ZKRollupBLS", function () {
         });
     });
 
-    describe("Gas Analysis", function () {
+    describe("Gas Analysis (mock bookkeeping only)", function () {
         it("Dovrebbe misurare gas per batch di diverse dimensioni", async function () {
             const sizes = [1, 5, 10, 20];
             const results = [];
 
-            console.log("\n    === Gas Analysis ===");
+            console.log("\n    === Mock bookkeeping gas; excludes real proof verification ===");
 
             for (const size of sizes) {
                 const messageHashes = Array.from({ length: size }, (_, i) =>
@@ -336,49 +334,10 @@ describe("ZKRollupBLS", function () {
 
             // Verifica che gas per tx diminuisce con batch size
             expect(results[3].gasPerTx).to.be.lessThan(results[0].gasPerTx);
+            expect(results[3].gasUsed).to.be.greaterThan(results[0].gasUsed);
         });
 
-        it("Dovrebbe confrontare con approccio tradizionale", async function () {
-            const numTx = 10;
-            const proof = createMockProof();
 
-            const messageHashes = Array.from({ length: numTx }, (_, i) =>
-                ethers.keccak256(ethers.toUtf8Bytes(`msg${i}`))
-            );
-            const publicKeysX = Array.from({ length: numTx }, (_, i) =>
-                BigInt(1000 + i)
-            );
-            const publicKeysY = Array.from({ length: numTx }, (_, i) =>
-                BigInt(2000 + i)
-            );
-            const stateRoot = ethers.keccak256(ethers.toUtf8Bytes("state"));
-
-            const tx = await zkContract
-                .connect(sequencer)
-                .submitBatchWithProof(
-                    stateRoot,
-                    messageHashes,
-                    publicKeysX,
-                    publicKeysY,
-                    proof
-                );
-            const receipt = await tx.wait();
-            const zkGas = Number(receipt.gasUsed);
-
-            // Traditional: ogni BLS pairing costa ~120k gas
-            const traditionalGas = numTx * 120000;
-
-            const savings = traditionalGas - zkGas;
-            const savingsPercent = (savings / traditionalGas) * 100;
-
-            console.log("\n    === ZK vs Traditional ===");
-            console.log(`    Transazioni: ${numTx}`);
-            console.log(`    ZK Rollup: ${zkGas.toLocaleString()} gas`);
-            console.log(`    Traditional: ${traditionalGas.toLocaleString()} gas`);
-            console.log(`    Risparmio: ${savings.toLocaleString()} gas (${savingsPercent.toFixed(1)}%)`);
-
-            expect(zkGas).to.be.lessThan(traditionalGas);
-        });
     });
 
     describe("Multi-Batch Scenario", function () {

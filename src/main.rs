@@ -1,13 +1,15 @@
-// prover/src/main.rs
-// CLI interface for BLS ZK Prover
-
-use bls_zk_prover::{BLSProver, BLSProofInputs, BLSPublicInputs, BLSPrivateInputs};
+use bls_zk_prover::{BLSPrivateInputs, BLSProofInputs, BLSProver, BLSPublicInputs, ProverResult};
 use clap::{Parser, Subcommand};
+use serde::Deserialize;
 use std::fs;
+use std::num::NonZeroUsize;
+use std::path::PathBuf;
 
 #[derive(Parser)]
-#[command(name = "bls-prover")]
-#[command(about = "BLS Signature ZK Prover CLI", long_about = None)]
+#[command(
+    name = "bls-prover",
+    about = "Groth16 demo CLI (BLS verification is not yet implemented)"
+)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -15,81 +17,102 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Esegue il trusted setup del circuito
+    /// Load existing artifacts and optionally export their verification key.
     Setup {
-        #[arg(short, long, default_value = "../circuits")]
+        #[arg(short, long, default_value = "./circuits")]
         circuit_path: String,
-
         #[arg(short, long)]
-        output: Option<String>,
+        output: Option<PathBuf>,
     },
-
-    /// Genera una prova ZK
+    /// Generate a proof of the current demo relation.
     Prove {
         #[arg(short, long)]
         message_hash: String,
-
         #[arg(long)]
         public_key_x: String,
-
         #[arg(long)]
         public_key_y: String,
-
         #[arg(long)]
         signature_x: String,
-
         #[arg(long)]
         signature_y: String,
-
-        #[arg(short, long, default_value = "../circuits")]
+        #[arg(short, long, default_value = "./circuits")]
         circuit_path: String,
-
         #[arg(short, long)]
-        output: Option<String>,
+        output: Option<PathBuf>,
     },
-
-    /// Verifica una prova
+    /// Verify a CLI artifact, or snarkjs proof JSON with --inputs-file.
     Verify {
         #[arg(short, long)]
-        proof_file: String,
-
+        proof_file: PathBuf,
         #[arg(short, long)]
-        inputs_file: String,
-
-        #[arg(short, long, default_value = "../circuits")]
+        inputs_file: Option<PathBuf>,
+        #[arg(short, long, default_value = "./circuits")]
         circuit_path: String,
     },
-
-    /// Benchmark di performance
+    /// Measure repeated demo proofs using a satisfying fixture.
     Benchmark {
         #[arg(short, long, default_value = "10")]
-        iterations: usize,
-
-        #[arg(short, long, default_value = "../circuits")]
+        iterations: NonZeroUsize,
+        #[arg(short, long, default_value = "./circuits")]
         circuit_path: String,
+        #[arg(long, default_value = "circuits/test_input.json")]
+        input_file: PathBuf,
     },
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let cli = Cli::parse();
+#[derive(Deserialize)]
+struct ProofFile {
+    proof: String,
+    #[serde(rename = "publicInputs")]
+    public_inputs: Vec<String>,
+}
 
-    match cli.command {
-        Commands::Setup { circuit_path, output } => {
-            println!("=== BLS ZK Prover - Trusted Setup ===\n");
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct CircuitInputs {
+    message_hash: String,
+    public_key_x: String,
+    public_key_y: String,
+    signature_x: String,
+    signature_y: String,
+}
 
-            let mut prover = BLSProver::new(&circuit_path);
-            prover.setup()?;
-
-            if let Some(output_path) = output {
-                let vk = prover.export_verifying_key()?;
-                fs::write(&output_path, vk)?;
-                println!("\nVerifying key salvata in: {}", output_path);
-            }
-
-            println!("\nSetup completato con successo");
+impl From<CircuitInputs> for BLSProofInputs {
+    fn from(input: CircuitInputs) -> Self {
+        Self {
+            public_inputs: BLSPublicInputs {
+                message_hash: input.message_hash,
+                public_key_x: input.public_key_x,
+                public_key_y: input.public_key_y,
+            },
+            private_inputs: BLSPrivateInputs {
+                signature_x: input.signature_x,
+                signature_y: input.signature_y,
+            },
         }
+    }
+}
 
+fn load_prover(circuit_path: &str) -> ProverResult<BLSProver> {
+    let mut prover = BLSProver::new(circuit_path);
+    prover.setup()?;
+    Ok(prover)
+}
+
+fn main() -> ProverResult<()> {
+    let cli = Cli::parse();
+    match cli.command {
+        Commands::Setup {
+            circuit_path,
+            output,
+        } => {
+            let prover = load_prover(&circuit_path)?;
+            if let Some(path) = output {
+                fs::write(path, prover.export_verifying_key()?)?;
+            }
+            println!("Loaded existing snarkjs artifacts (demo circuit).");
+        }
         Commands::Prove {
             message_hash,
             public_key_x,
@@ -99,126 +122,94 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             circuit_path,
             output,
         } => {
-            println!("=== BLS ZK Prover - Generazione Prova ===\n");
-
-            let mut prover = BLSProver::new(&circuit_path);
-            prover.setup()?;
-
-            let inputs = BLSProofInputs {
-                public_inputs: BLSPublicInputs {
-                    message_hash: message_hash.clone(),
-                    public_key_x: public_key_x.clone(),
-                    public_key_y: public_key_y.clone(),
-                },
-                private_inputs: BLSPrivateInputs {
-                    signature_x,
-                    signature_y,
-                },
-            };
-
-            println!("Input pubblici:");
-            println!("  Message hash: {}", message_hash);
-            println!("  Public key X: {}", public_key_x);
-            println!("  Public key Y: {}", public_key_y);
-            println!();
-
+            let prover = load_prover(&circuit_path)?;
+            let inputs = BLSProofInputs::from(CircuitInputs {
+                message_hash,
+                public_key_x,
+                public_key_y,
+                signature_x,
+                signature_y,
+            });
             let (result, stats) = prover.generate_proof(inputs)?;
-
-            println!("\n=== Statistiche ===");
-            println!("Proving time: {} ms", stats.proving_time_ms);
-            println!("Verification time: {} ms", stats.verification_time_ms);
-            println!("Proof size: {} bytes", stats.proof_size_bytes);
-            println!("Constraints: {}", stats.num_constraints);
-
-            if let Some(output_path) = output {
-                let output_data = serde_json::json!({
-                    "proof": hex::encode(&result.proof),
-                    "publicInputs": result.public_inputs,
-                    "stats": stats,
-                });
-
-                fs::write(&output_path, serde_json::to_string_pretty(&output_data)?)?;
-                println!("\nProva salvata in: {}", output_path);
+            let artifact = serde_json::json!({
+                "proof": hex::encode(&result.proof),
+                "publicInputs": result.public_inputs,
+                "solidityCalldata": result.solidity_calldata,
+                "stats": stats,
+            });
+            let json = serde_json::to_string_pretty(&artifact)?;
+            if let Some(path) = output {
+                fs::write(&path, json)?;
+                println!("Proof saved to {}", path.display());
             } else {
-                println!("\nProof (hex): {}", hex::encode(&result.proof));
+                println!("{json}");
             }
         }
-
         Commands::Verify {
             proof_file,
             inputs_file,
             circuit_path,
         } => {
-            println!("=== BLS ZK Prover - Verifica Prova ===\n");
-
-            let mut prover = BLSProver::new(&circuit_path);
-            prover.setup()?;
-
-            let proof_data = fs::read_to_string(proof_file)?;
-            let proof_json: serde_json::Value = serde_json::from_str(&proof_data)?;
-
-            let proof_hex = proof_json["proof"].as_str().ok_or("Missing proof")?;
-            let proof_bytes = hex::decode(proof_hex)?;
-
-            let public_inputs: Vec<String> = proof_json["publicInputs"]
-                .as_array()
-                .ok_or("Missing publicInputs")?
-                .iter()
-                .map(|v| v.as_str().unwrap().to_string())
-                .collect();
-
-            let is_valid = prover.verify_proof(&proof_bytes, &public_inputs)?;
-
-            if is_valid {
-                println!("PROVA VALIDA");
+            let prover = load_prover(&circuit_path)?;
+            let data = fs::read_to_string(proof_file)?;
+            let (proof, public_inputs) = if let Some(path) = inputs_file {
+                (
+                    data,
+                    serde_json::from_slice::<Vec<String>>(&fs::read(path)?)?,
+                )
             } else {
-                println!("PROVA NON VALIDA");
+                let artifact: ProofFile = serde_json::from_str(&data)?;
+                (
+                    String::from_utf8(hex::decode(artifact.proof)?)?,
+                    artifact.public_inputs,
+                )
+            };
+            if !prover.verify_proof(&proof, &public_inputs)? {
+                return Err("Invalid proof".into());
             }
+            println!("Proof verified (demo relation; not BLS verification).");
         }
-
         Commands::Benchmark {
             iterations,
             circuit_path,
+            input_file,
         } => {
-            println!("=== BLS ZK Prover - Benchmark ===\n");
-            println!("Iterazioni: {}\n", iterations);
-
-            let mut prover = BLSProver::new(&circuit_path);
-            prover.setup()?;
-
-            let mut total_proving_time = 0u128;
-            let mut total_verification_time = 0u128;
-            let mut total_proof_size = 0usize;
-
-            for i in 0..iterations {
-                let inputs = BLSProofInputs {
-                    public_inputs: BLSPublicInputs {
-                        message_hash: format!("{}", i * 12345),
-                        public_key_x: format!("{}", i * 67890),
-                        public_key_y: format!("{}", i * 11111),
-                    },
-                    private_inputs: BLSPrivateInputs {
-                        signature_x: format!("{}", i * 22222),
-                        signature_y: format!("{}", i * 33333),
-                    },
-                };
-
-                let (result, stats) = prover.generate_proof(inputs)?;
-
-                total_proving_time += stats.proving_time_ms;
-                total_verification_time += stats.verification_time_ms;
-                total_proof_size += stats.proof_size_bytes;
-
-                println!("Iterazione {}: {} ms (prove), {} ms (verify)",
-                         i + 1, stats.proving_time_ms, stats.verification_time_ms);
+            let prover = load_prover(&circuit_path)?;
+            let input: CircuitInputs = serde_json::from_slice(&fs::read(input_file)?)?;
+            let input = BLSProofInputs::from(input);
+            let mut proving_time = 0;
+            let mut verification_time = 0;
+            let mut proof_size = 0;
+            for _ in 0..iterations.get() {
+                let (_, stats) = prover.generate_proof(input.clone())?;
+                proving_time += stats.proving_time_ms;
+                verification_time += stats.verification_time_ms;
+                proof_size += stats.proof_size_bytes;
             }
-
-            println!("\n=== Risultati ===");
-            println!("Media proving time: {} ms", total_proving_time / iterations as u128);
-            println!("Media verification time: {} ms", total_verification_time / iterations as u128);
-            println!("Media proof size: {} bytes", total_proof_size / iterations);
+            println!("Demo relation benchmark (not BLS):");
+            println!(
+                "Average proving time: {} ms",
+                proving_time / iterations.get() as u128
+            );
+            println!(
+                "Average verification time: {} ms",
+                verification_time / iterations.get() as u128
+            );
+            println!(
+                "Average proof JSON size: {} bytes",
+                proof_size / iterations.get()
+            );
         }
     }
-
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rejects_zero_benchmark_iterations() {
+        assert!(Cli::try_parse_from(["bls-prover", "benchmark", "--iterations", "0"]).is_err());
+    }
 }

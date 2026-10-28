@@ -1,198 +1,155 @@
 # blsZK
 
-An educational prototype for exploring off-chain Groth16 proofs and Ethereum batch submission. The project combines a Circom circuit, a Rust prover wrapper around snarkjs, and Solidity contracts that record submissions and update an L2 state root.
+An experimental project studying BLS batch validity proofs and the trade-offs between off-chain proving and Ethereum verification.
 
-**Status: experimental and incomplete.** The circuit demonstrates a Poseidon-based relation; it does not implement BLS signature verification or elliptic-curve pairings. The current checkout also has build and integration blockers described below. Use it for learning and development experiments.
+**Current milestone:** a working Circom → snarkjs → Rust CLI → Solidity pipeline for a **Poseidon demo relation**. Real BLS signature verification, signature aggregation, and proven rollup state transitions are still to be implemented. The demo does not establish BLS security or the presentation's performance claims.
 
 ## Why use this project?
 
-- Explore the circuit → witness → Groth16 proof → verifier workflow on BN254.
-- Experiment with public message/key inputs and private signature-coordinate witnesses.
-- Study sequencer-controlled batch submission, submission events, and state tracking in Solidity.
-- Extend a Rust CLI with setup, proving, verification, and timing commands.
-- Inspect Hardhat tests for access control, batch validation, and gas measurements.
-
-## Project layout
-
-| Path | Purpose |
-| --- | --- |
-| [circuits/bls_verify.circom](circuits/bls_verify.circom) | Simplified verification relation and signature-coordinate range checks |
-| [src/lib.rs](src/lib.rs) | snarkjs process wrapper, verification-key loading, and sequential batch proving |
-| [src/main.rs](src/main.rs) | `bls-prover` CLI |
-| [contracts/ZKRollupBLS.sol](contracts/ZKRollupBLS.sol) | Batch submission, submission records, and L2 state tracking |
-| [contracts/IBLSVerifier.sol](contracts/IBLSVerifier.sol) | Separate bytes-based verifier interface |
-| [scripts/](scripts/) | Circuit setup, sample proof generation, and deployment helpers |
-| [test/ZKRollupBLS.test.js](test/ZKRollupBLS.test.js) | Hardhat tests intended to use a mock verifier |
-| [benches/proving_benchmark.rs](benches/proving_benchmark.rs) | Benchmark placeholder |
-| [hardhat.config.js](hardhat.config.js) | Solidity 0.8.20, optimizer, networks, and gas reporter settings |
+- Generate and verify actual Groth16 proofs on BN254, including on a local EVM.
+- Build circuit artifacts with a pinned local Circom compiler and compile contracts with a pinned Solidity compiler.
+- Use a Rust CLI for artifact loading, proving, verification, Solidity calldata export, and demo timing.
+- Test sequencer access control and submission bookkeeping separately from cryptographic verification.
+- Extend a reproducible baseline toward real BLS batch proofs. See the [implementation roadmap](docs/ROADMAP.md).
 
 ## Getting started
 
 ### Prerequisites
 
-- Git, Node.js, and npm. [package.json](package.json) declares Node.js `>=18` and npm `>=9`; use a Node.js version supported by the installed Hardhat 2 release.
-- A Circom **2.x** compiler on `PATH` for circuit work. See the [Circom compiler repository](https://github.com/iden3/circom) for installation instructions.
-- Rust and Cargo with Rust 2021 edition support for the prover. No minimum Rust version is pinned.
-- A Bash-compatible shell for the examples and helper scripts.
+- Node.js 22 or newer and npm 9 or newer. Node.js 22 is recorded in [.nvmrc](.nvmrc).
+- Rust and Cargo supporting the Rust 2021 edition; no minimum Rust version is pinned.
+- A Bash-compatible shell. No global Circom or snarkjs installation is required.
 
 ```sh
 git clone https://github.com/msalauchuk/blsZK.git
 cd blsZK
-npm install
-export PATH="$PWD/node_modules/.bin:$PATH"
+npm ci
+npm run test:proof
 ```
 
-The supplied `package-lock.json` differs from `package.json`; use `npm install` to reconcile it before adopting `npm ci`. The `PATH` addition exposes the local `snarkjs` executable to scripts and the Rust wrapper; repeat it in each new shell.
+`test:proof` compiles the circuit, creates development proving keys, generates a satisfying sample input and proof, builds the Rust CLI, compiles the Solidity verifier, and runs the real-proof integration tests on Hardhat's local EVM. Contributions use fresh randomness; proofs and key files vary between runs.
 
-### Current setup blockers
+The local `circom2` package bundles Circom 2.2.3 as WASM. To use an installed native compiler, set `CIRCOM_BIN=circom` when running `npm run circuit:compile`. Solidity 0.8.20 is loaded from the locked `solc` npm package, so compilation needs no additional compiler download.
 
-These limitations apply to the supplied source, before any local fixes:
+The development setup runs a single-machine ceremony. It is not a production trusted setup. A reusable Powers of Tau file is cached locally; circuit-specific keys and the verifier are regenerated on each circuit compilation. Regenerate proofs and redeploy any verifier after recompiling.
 
-| Area | What needs attention |
+### Common commands
+
+Run these from the repository root:
+
+| Command | Purpose |
 | --- | --- |
-| npm shortcuts | `circuit:*` scripts look for helpers under `circuits/scripts/`, but helpers live in `scripts/`. `prover:*` scripts expect a nonexistent `prover/` directory. `full:setup` inherits these problems. |
-| Circuit helpers | Both shell helpers resolve the circuit directory to the repository root, so their input and output paths differ from `circuits/build/`, which the prover expects. Use the direct circuit commands below. |
-| Rust build | `src/lib.rs` imports undeclared `ark_ec`; Arkworks 0.4 dependencies are mixed with `ark-circom` 0.5. `BLSProofInputs` lacks `Clone` for batch proving, and the CLI passes proof bytes where `verify_proof` expects JSON text. Dependency/API alignment is required. |
-| Solidity build and tests | `ZKRollupBLS.sol` starts with `/ SPDX...` instead of a valid comment. Tests and the deployment fallback require `MockBLSVerifier`, whose source is absent. |
-| On-chain integration | The rollup calls a verifier with a dynamic `uint256[]`; snarkjs generates a fixed-size public-signal parameter. The circuit exposes four public signals, while the rollup prepares three per submission. An adapter or coordinated circuit/contract changes are required. |
+| `npm run circuit:compile` | Compile the demo, create development keys, and export the Solidity verifier |
+| `npm run circuit:prove` | Generate a satisfying demo fixture and a snarkjs proof |
+| `npm run circuit:prove -- /path/to/input.json` | Prove a supplied input file without replacing it |
+| `npm run prover:build` | Build the Rust CLI in release mode |
+| `npm run full:setup` | Generate circuit artifacts and build the release CLI and Solidity contracts |
+| `npm test` | Run rollup bookkeeping tests with a mock verifier |
+| `npm run test:proof` | Build prerequisites and test real proofs across Rust, snarkjs, and Solidity |
+| `cargo test --locked` | Run Rust parser, artifact-loading, and CLI validation tests |
+| `cargo clippy --all-targets --locked -- -D warnings` | Check Rust code for warnings |
+| `npm run prover:bench` | Time repeated proofs of the same satisfying demo fixture; run `circuit:prove` first |
+| `REPORT_GAS=true npm test` | Report mock bookkeeping gas, excluding real proof verification |
 
-### Compile the circuit and create development keys
+### What the demo proves
 
-Run from the repository root after installing dependencies and Circom. These direct commands bypass the helper path problems:
+The circuit enforces this field relation:
 
-```sh
-mkdir -p circuits/build
-circom circuits/bls_verify.circom --r1cs --wasm --sym \
-  -l node_modules -o circuits/build
-snarkjs r1cs info circuits/build/bls_verify.r1cs
-
-cd circuits/build
-snarkjs powersoftau new bn128 12 pot12_0000.ptau
-snarkjs powersoftau contribute pot12_0000.ptau pot12_0001.ptau \
-  --name="Local development"
-snarkjs powersoftau prepare phase2 pot12_0001.ptau pot12_final.ptau
-snarkjs groth16 setup bls_verify.r1cs pot12_final.ptau bls_verify_0000.zkey
-snarkjs zkey contribute bls_verify_0000.zkey bls_verify_final.zkey \
-  --name="Local development"
-snarkjs zkey verify bls_verify.r1cs pot12_final.ptau bls_verify_final.zkey
-snarkjs zkey export verificationkey bls_verify_final.zkey verification_key.json
-snarkjs zkey export solidityverifier bls_verify_final.zkey Verifier.sol
-cd ../..
+```text
+Poseidon(messageHash, signatureX, signatureY, publicKeyX)
+    == publicKeyX + publicKeyY
 ```
 
-The contribution commands prompt for entropy. This is a local development setup; it does not establish a production ceremony. Power `12` accommodates up to 4,096 constraints; increase it if circuit changes exceed that capacity. See the [snarkjs setup guide](https://github.com/iden3/snarkjs#guide) for ceremony details.
+`isValid` is constrained to `1`. The sample generator computes `publicKeyY` to satisfy this equation; the named inputs are **not BLS key/signature points**. This relation has no BLS pairing or hash-to-curve operation.
 
-The generated files under `circuits/build/` include the R1CS, witness-generator JavaScript/WASM, proving key, verification key, and Solidity verifier. Regenerate the keys and verifier whenever the circuit changes.
+The public-signal order is `[isValid, messageHash, publicKeyX, publicKeyY]`. The [demo adapter](contracts/DemoVerifierAdapter.sol) supplies `isValid = 1` and maps exactly one tuple into the generated verifier's fixed-size ABI. It rejects multi-tuple inputs. This lets the existing rollup interface exercise a real proof without claiming batch verification.
 
-### Generate and verify an example proof
+### Rust CLI
 
-Create an input file at the repository root. Values are decimal strings representing field elements:
+Build with `cargo build --locked`, then inspect `./target/debug/bls-prover --help`. Its default circuit directory is `./circuits`.
+
+Load existing artifacts and optionally export the verification key:
 
 ```sh
-cat > circuits/test_input.json <<'JSON'
-{
-  "messageHash": "12345678901234567890",
-  "publicKeyX": "98765432109876543210",
-  "publicKeyY": "11111111111111111111",
-  "signatureX": "22222222222222222222",
-  "signatureY": "33333333333333333333"
-}
-JSON
-
-snarkjs groth16 fullprove circuits/test_input.json \
-  circuits/build/bls_verify_js/bls_verify.wasm \
-  circuits/build/bls_verify_final.zkey \
-  circuits/build/proof.json circuits/build/public.json
-
-snarkjs groth16 verify circuits/build/verification_key.json \
-  circuits/build/public.json circuits/build/proof.json
-
-snarkjs zkey export soliditycalldata \
-  circuits/build/public.json circuits/build/proof.json
+cargo run --locked -- setup --output circuits/build/exported_verification_key.json
 ```
 
-`proof.json` contains the Groth16 proof; `public.json` contains `[isValid, messageHash, publicKeyX, publicKeyY]`. Solidity calldata is printed to the terminal.
-
-**Proof verification does not establish signature validity here.** The circuit computes whether `Poseidon(messageHash, signatureX, signatureY, publicKeyX)` equals `publicKeyX + publicKeyY`, but never constrains `isValid` to `1`. An output of `0` can therefore have a valid proof. The sample inputs demonstrate the proof workflow without asserting that this relation holds.
-
-### Rust prover CLI
-
-After resolving the Rust build blockers above, build from the repository root:
+`setup` loads files created by `circuit:compile`; it does not perform a ceremony. To prove the generated sample using the Rust wrapper:
 
 ```sh
-cargo build --release
-./target/release/bls-prover --help
-./target/release/bls-prover setup --circuit-path ./circuits \
-  --output circuits/build/exported_verification_key.json
-./target/release/bls-prover prove --circuit-path ./circuits \
+DEMO_PUBLIC_KEY_Y="$(node -p 'require("./circuits/test_input.json").publicKeyY')"
+cargo run --locked -- prove \
   --message-hash 12345678901234567890 \
   --public-key-x 98765432109876543210 \
-  --public-key-y 11111111111111111111 \
+  --public-key-y "$DEMO_PUBLIC_KEY_Y" \
   --signature-x 22222222222222222222 \
   --signature-y 33333333333333333333 \
   --output circuits/build/rust_proof.json
+
+cargo run --locked -- verify --proof-file circuits/build/rust_proof.json
 ```
 
-Always pass `--circuit-path ./circuits` when running from the root; the CLI defaults to `../circuits`. Its `setup` command loads existing snarkjs artifacts and optionally exports the verification-key JSON. It does not perform a trusted setup.
+The output includes `proof` (hex-encoded snarkjs proof JSON), `publicInputs`, `solidityCalldata`, and `stats`. The JSON proof bytes are different from ABI-encoded Solidity proof coordinates. `proof_size_bytes` measures JSON size; `num_constraints` is `null` because the wrapper does not read R1CS metadata. Proving time includes witness generation and process startup; verification time includes its snarkjs process startup. Each operation uses a separate temporary directory.
 
-The CLI output file contains `proof` (hex-encoded proof JSON), `publicInputs`, and timing/size statistics. This differs from snarkjs's `proof.json` and from the contract's 256-byte coordinate encoding. The library's Solidity-calldata parser currently returns placeholders; use the direct snarkjs calldata export for experiments. The CLI `verify` path needs the type fix noted above and currently requires an unused `--inputs-file` argument.
-
-`BatchProver` generates individual proofs sequentially and concatenates their JSON bytes. It does not aggregate proofs into one Groth16 proof.
-
-### Contracts and local deployment
-
-After repairing the Solidity build, supplying the mock verifier for tests, and resolving the verifier integration:
+Raw snarkjs proof files are also supported:
 
 ```sh
-npm run compile
-npm test
-REPORT_GAS=true npm test
-npm run coverage
+cargo run --locked -- verify \
+  --proof-file circuits/build/proof.json \
+  --inputs-file circuits/build/public.json
 ```
 
-The tests exercise batch submission through struct and bytes interfaces, sequencer permissions, submission records, state reads, verifier updates, and gas usage. They use a mock verifier, so their results do not validate the circuit or establish real-proof gas savings.
+Invalid proofs return a nonzero exit status. Proving and verification delegate to the project's local snarkjs installation, with a global `snarkjs` executable as a fallback. Rust does not implement a separate Arkworks prover. The library's `BatchProver` produces independent proofs sequentially; its concatenated bytes are not one aggregated proof.
 
-To make the generated verifier available before Hardhat compiles:
+### Local deployment
+
+After `npm run full:setup`, start a local node:
 
 ```sh
-cp circuits/build/Verifier.sol contracts/Verifier.sol
-npm run compile
 npm run node
 ```
 
-Keep the node running, then open another terminal at the repository root:
+In another terminal at the repository root:
 
 ```sh
 npm run deploy
 ```
 
-[scripts/deploy.js](scripts/deploy.js) uses the deployer as sequencer and writes addresses and verifier type to `deployments/<network>.json`. It attempts a generated verifier and falls back to `MockBLSVerifier` if unavailable; that fallback requires the missing mock contract. Copying the generated source before compilation avoids the script's first-run artifact ordering issue, but the verifier ABI and public-signal mismatches still require implementation changes.
+The deployment script deploys the generated Groth16 verifier, the single-tuple demo adapter, and `ZKRollupBLS`. The deployer becomes sequencer. Addresses are saved to `deployments/<network>.json`. Deployment fails if the generated verifier is missing; there is no automatic mock fallback.
 
-The rollup records a sequencer-supplied state root. That root is not bound to the circuit's public signals, and the circuit handles a single input tuple rather than proving a batch state transition.
+The rollup still accepts a sequencer-supplied state root that is not proven by the circuit. Proof replay protection and transitions between account states are not implemented. Use the current workflow for local experiments.
 
-## Development and contributions
+## Project layout
 
-Contributions can focus on the setup blockers, enforcing the intended circuit relation, aligning the verifier ABI/public signals, and adding integration tests with real proofs.
+| Path | Purpose |
+| --- | --- |
+| [circuits/bls_verify.circom](circuits/bls_verify.circom) | Current Poseidon demo circuit |
+| [src/lib.rs](src/lib.rs) | snarkjs orchestration and calldata parsing |
+| [src/main.rs](src/main.rs) | `bls-prover` CLI |
+| [contracts/ZKRollupBLS.sol](contracts/ZKRollupBLS.sol) | Experimental submission bookkeeping and state tracking |
+| [contracts/DemoVerifierAdapter.sol](contracts/DemoVerifierAdapter.sol) | Single-tuple adapter for the demo's four public signals |
+| [contracts/test/MockBLSVerifier.sol](contracts/test/MockBLSVerifier.sol) | Configurable test double with no cryptography |
+| [scripts/](scripts/) | Development setup, fixture/proof generation, and deployment |
+| [test/](test/) | Mock-based bookkeeping tests |
+| [integration/ProofPipeline.test.js](integration/ProofPipeline.test.js) | Real-proof interoperability and rejection tests |
+| [hardhat.config.js](hardhat.config.js) | Solidity compiler, local networks, and gas reporting |
 
-1. Fork the repository and create a focused branch.
-2. Make the change and add tests for the affected behavior.
-3. Run the relevant checks from the root: `cargo check`, `cargo test`, `npm run compile`, and `npm test`. For circuit changes, regenerate artifacts and verify a sample proof.
-4. Open a pull request describing the behavior change, validation performed, and any remaining blockers.
-
-The Rust tests and benchmark are currently placeholders. There is no CI configuration or separate contribution guide in this checkout; report which checks actually ran and passed.
-
-Keep `.env`, private keys, generated proofs, and build outputs out of commits. Review [.gitignore](.gitignore) when contributing: its broad `*.json` rule also ignores package manifests and lockfiles unless already tracked or explicitly included.
+Generated files live in `circuits/build/` and `contracts/generated/` and are ignored by Git. Manifests and lockfiles are tracked normally.
 
 ## Help and documentation
 
-- Use the repository's **Issues** tab for questions and reproducible bug reports, and **Pull requests** for proposed changes. Include tool versions, the command run, and the error output.
-- Read the [circuit](circuits/bls_verify.circom), [CLI](src/main.rs), [prover library](src/lib.rs), and [contract tests](test/ZKRollupBLS.test.js) for implementation examples.
-- Consult the upstream [Circom repository](https://github.com/iden3/circom), [snarkjs documentation](https://github.com/iden3/snarkjs), and [Hardhat 2 documentation](https://v2.hardhat.org/hardhat-runner/docs/getting-started).
+Use the repository's **Issues** tab for questions and reproducible bug reports. Include tool versions, the command run, and its output. Read the [roadmap](docs/ROADMAP.md), [CLI source](src/main.rs), and [integration tests](integration/ProofPipeline.test.js) for scope and examples.
 
-## Maintainers
+Upstream references: [Circom](https://github.com/iden3/circom), [circom2 WASM compiler](https://github.com/antimatter15/circom), [snarkjs](https://github.com/iden3/snarkjs), and [Hardhat 2](https://v2.hardhat.org/hardhat-runner/docs/getting-started).
 
-[Cargo.toml](Cargo.toml) lists **ZK-Rollup** as the author. No individual maintainer or dedicated support contact is documented in the checkout. Coordinate maintenance and contributions through repository issues and pull requests.
+## Maintainers and contributions
+
+[Cargo.toml](Cargo.toml) lists **ZK-Rollup** as the author. No dedicated maintenance contact is documented; coordinate through repository issues and pull requests.
+
+Fork the repository, create a focused branch, and open a pull request describing the behavior change and checks performed. Run the relevant Rust, contract, and real-proof tests listed above. For circuit changes, regenerate keys/proofs and include rejection tests. Mock gas measurements must not be presented as real BLS verification savings.
+
+Keep private keys, `.env`, generated proofs, and build outputs out of commits. There is no separate contribution guide or CI workflow yet.
 
 ## License
 
-The package manifests declare **MIT**, and the Solidity sources contain MIT SPDX labels. A standalone `LICENSE` file is not included in this checkout; maintainers should add it to document the licensing terms.
+The package manifests declare **MIT**, and Solidity sources carry MIT SPDX labels. A standalone `LICENSE` file has not yet been supplied.
