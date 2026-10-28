@@ -2,15 +2,16 @@
 
 An experimental project proving BLS signature validity off-chain and checking the resulting Groth16 proof on Ethereum.
 
-**Working milestone:** one real BLS12-381 Basic/min-pk signature over a **25-byte message** is verified inside a gnark circuit, proved with BN254 Groth16, and accepted by a Solidity consumer on a local Ethereum VM. The signature is a private witness. Batch proofs, signer authorization, replay protection, and rollup state transitions remain to be implemented.
+**Working milestone:** one BN254 Groth16 proof verifies an aggregate of **two BLS12-381 Basic/min-pk signatures** inside a gnark circuit. Each entry carries a **25-byte payload**, signed together with its chain, contract, batch number, size, and position. The Solidity consumer checks authorized keys, rejects replayed batches, and records a verified batch commitment. Account-state transitions remain to be implemented. The earlier one-signature proof is retained as a separate reference.
 
 ## Why use this project?
 
 - Generate a genuine proof covering BLS hash-to-curve, point/subgroup validation, and the pairing equation.
-- Bind every public message byte and public-key coordinate to on-chain verification.
+- Bind all batch entries and their signed submission context to a canonical SHA-256 commitment.
+- Enforce signer authorization and sequential batch IDs on-chain.
 - Cross-check the signature scheme using independent Rust/blst, JavaScript, and direct Solidity implementations.
 - Inspect acceptance and adversarial-witness tests alongside local gas measurements.
-- Extend the prototype toward batch proofs and compare off-chain computation with direct Ethereum verification. See the [roadmap](docs/ROADMAP.md).
+- Extend batch capacity and compare off-chain computation with direct Ethereum verification. See the [roadmap](docs/ROADMAP.md).
 
 The repository also retains its earlier Circom/snarkjs **Poseidon demo** as a separate workflow. That circuit does not verify BLS signatures.
 
@@ -27,12 +28,12 @@ The repository also retains its earlier Circom/snarkjs **Poseidon demo** as a se
 git clone https://github.com/msalauchuk/blsZK.git
 cd blsZK
 npm ci
-npm run test:bls:proof
+npm run test:bls:batch
 ```
 
-The command builds the pinned Go backend, tests the circuit with adversarial witnesses, generates development keys if needed, proves the committed BLS fixture, verifies the proof natively, compiles the exported Solidity verifier, and submits a local EVM verification transaction. It also tests rejection of altered statements and proofs.
+The command builds the pinned Go backend, tests adversarial witnesses, generates development keys if needed, and deploys the actual exported Solidity verifier locally. It signs the deployment context with deterministic test keys, produces one genuine aggregate-BLS proof, verifies it natively, and submits a local EVM transaction. It also tests altered entries, authorization, and replay rejection.
 
-Fresh key generation took about six minutes on the development Mac; later runs reuse compatible circuit/key artifacts. The proving process uses four Go workers and a 3 GiB Go heap GC target, which is not a hard process-memory cap. Local generation was validated on an 8 GB Mac.
+Fresh batch key generation took about 13 minutes on the development Mac; later runs reuse compatible circuit/key artifacts. The proving process uses four Go workers and a 3 GiB Go heap GC target, which is not a hard process-memory cap. Local generation was validated on an 8 GB Mac.
 
 The setup is a single-machine **development ceremony**. Production use requires an appropriate trusted setup and review. Generated keys, proofs, and Solidity exports are ignored by Git.
 
@@ -42,7 +43,11 @@ Run these from the repository root:
 
 | Command | Purpose |
 | --- | --- |
-| `npm run test:bls:proof` | Full real-BLS proof and local-EVM acceptance/rejection workflow |
+| `npm run test:bls:batch` | Full two-entry aggregate-BLS proof and local-EVM workflow |
+| `npm run bls:batch:inspect` | Compile the batch circuit and report its size |
+| `npm run bls:batch:setup` | Regenerate batch development keys and the generated verifier |
+| `npm run bls:batch:prove -- batch.json` | Prove an aggregate signed for a deployment/batch context |
+| `npm run test:bls:proof` | Separate one-signature proof reference workflow |
 | `npm run bls:proof:inspect` | Compile the BLS circuit and report its size |
 | `npm run bls:proof:setup` | Explicitly regenerate the BLS circuit's development keys and verifier |
 | `npm run bls:proof:prove -- statement.json` | Prove a supported BLS statement using existing/current setup artifacts |
@@ -51,34 +56,29 @@ Run these from the repository root:
 | `cargo test --locked` | Native BLS, parser, artifact-loading, and CLI tests |
 | `cargo clippy --all-targets --locked -- -D warnings` | Rust warning checks |
 
-The first circuit accepts exactly 25 raw message bytes, with the fixed ciphersuite `BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_NUL_`. The committed fixture signs `blsZK BLS12-381 reference`. Other valid statements of the same byte length use the same circuit/key. See the [proof workflow](docs/BLS_PROOF.md) for its statement, encoding, cache behavior, and measurements.
+The batch circuit supports exactly two active entries with 25-byte payloads under `BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_NUL_`. Its complete signed messages are 119-byte frames covering payload and submission context. See the [batch guide](docs/BLS_BATCH.md) for aggregation, framing, commitment encoding, and limitations. The separate [one-signature circuit](docs/BLS_PROOF.md) accepts 25 raw message bytes.
 
-### Local deployment and verification
+### Local batch deployment and demonstration
 
-Generate keys and start a persistent local node:
+Generate batch keys and start a persistent local node:
 
 ```sh
-npm run bls:proof:setup
+npm run bls:batch:setup
 npm run node
 ```
 
 In another terminal at the repository root:
 
 ```sh
-npm run bls:proof:deploy
+npm run bls:batch:deploy
+npm run bls:batch:demo
 ```
 
-This deploys the generated BLS Groth16 verifier and [BLSProofVerifier](contracts/BLSProofVerifier.sol), which pins the verifying-key hash and reconstructs all 37 public inputs from the submitted message and key. Addresses are saved to `deployments/<network>-bls-proof.json`.
+This deploys the generated batch verifier and [BLSBatchVerifier](contracts/BLSBatchVerifier.sol). The local demo authorizes public test keys, signs the current chain/contract/batch context, generates one aggregate-BLS proof, and submits both entries. Repeating the demo signs and submits the next batch. Deployment addresses are saved to `deployments/<network>-bls-batch.json`.
 
-The generated `proofs/gnark/build/proof.json` exposes `message`, `publicKey`, and `proof` for verification:
+Real applications collect context-bound signatures from their signers and authorize the corresponding keys through the deploying owner. The [batch guide](docs/BLS_BATCH.md) describes the prover's JSON input and `submitBatch` arguments. Generated proofs and local transaction measurements are saved under `proofs/gnark/build/batch/`. Regenerating keys requires new proofs and a new verifier deployment.
 
-```js
-await verifier.verifyProof(artifact.message, artifact.publicKey, artifact.proof);
-```
-
-Success returns normally; invalid proofs revert. Use the full proof byte string, including gnark's commitments and proof of knowledge. The current encoding is **384 bytes**, distinct from the legacy snarkjs proof JSON/coordinate encoding. Regenerating keys requires new proofs and a new verifier deployment.
-
-This consumer is stateless. It does not authorize signers or enforce account-state transitions or replay protection.
+The batch contract records verified commitments and enforces replay/authorization checks. It does not execute payloads or prove account-state transitions. The earlier [BLSProofVerifier](contracts/BLSProofVerifier.sol) remains a separate stateless one-signature consumer.
 
 ## Native and direct BLS references
 
@@ -120,7 +120,10 @@ The library's `BatchProver` still generates independent proofs sequentially; con
 
 | Path | Purpose |
 | --- | --- |
-| [proofs/gnark/](proofs/gnark/) | Full BLS circuit, prover, development setup, and adversarial witness tests |
+| [proofs/gnark/batch/](proofs/gnark/batch/) | Aggregate-BLS batch circuit, prover, and adversarial witness tests |
+| [contracts/BLSBatchVerifier.sol](contracts/BLSBatchVerifier.sol) | Batch commitment, signer authorization, and replay protection |
+| [integration/BLSBatch.test.js](integration/BLSBatch.test.js) | Genuine aggregate proof acceptance and adversarial contract tests |
+| [proofs/gnark/](proofs/gnark/) | One-signature BLS circuit/reference and pinned Go dependencies |
 | [contracts/BLSProofVerifier.sol](contracts/BLSProofVerifier.sol) | Real BLS proof consumer with public-statement/key binding |
 | [integration/BLSProof.test.js](integration/BLSProof.test.js) | Genuine BLS proof acceptance, transaction, and tampering tests |
 | [src/bls.rs](src/bls.rs) | Native BLS12-381 reference verification |
@@ -136,7 +139,7 @@ Generated artifacts live under `proofs/gnark/build/`, `circuits/build/`, and `co
 
 ## Help and documentation
 
-Use the repository's **Issues** tab for questions and reproducible bug reports. Include tool versions, commands, and output. Start with the [BLS proof guide](docs/BLS_PROOF.md), [BLS scheme reference](docs/BLS_REFERENCE.md), [backend rationale](docs/BLS_PROVING.md), and [roadmap](docs/ROADMAP.md).
+Use the repository's **Issues** tab for questions and reproducible bug reports. Include tool versions, commands, and output. Start with the [batch guide](docs/BLS_BATCH.md), [one-signature proof guide](docs/BLS_PROOF.md), [BLS scheme reference](docs/BLS_REFERENCE.md), [backend rationale](docs/BLS_PROVING.md), and [roadmap](docs/ROADMAP.md).
 
 Upstream references: [gnark](https://github.com/Consensys-Incorporated/gnark), [blst](https://github.com/supranational/blst), [Circom](https://github.com/iden3/circom), [snarkjs](https://github.com/iden3/snarkjs), and [Hardhat 2](https://v2.hardhat.org/hardhat-runner/docs/getting-started).
 

@@ -1,7 +1,7 @@
 {
   "name": "zk-rollup-bls",
   "version": "1.0.0",
-  "description": "Experimental Groth16 pipeline with native and on-chain BLS12-381 reference verification",
+  "description": "Aggregate BLS12-381 batch verification with Groth16 proofs and Solidity commitment/replay checks",
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
@@ -23,7 +23,13 @@
     "bls:proof:setup": "bash scripts/bls_proof.sh setup",
     "bls:proof:prove": "bash scripts/bls_proof.sh prove",
     "test:bls:proof": "bash scripts/bls_proof.sh test",
-    "bls:proof:deploy": "hardhat run scripts/deploy_bls_proof.js --network localhost"
+    "bls:proof:deploy": "hardhat run scripts/deploy_bls_proof.js --network localhost",
+    "bls:batch:inspect": "bash scripts/bls_batch.sh inspect",
+    "bls:batch:setup": "bash scripts/bls_batch.sh setup",
+    "bls:batch:prove": "bash scripts/bls_batch.sh prove",
+    "bls:batch:deploy": "hardhat run scripts/deploy_bls_batch.js --network localhost",
+    "bls:batch:demo": "hardhat run scripts/demo_bls_batch.js --network localhost",
+    "test:bls:batch": "bash scripts/bls_batch.sh test"
   },
   "repository": {
     "type": "git",

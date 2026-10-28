@@ -20,17 +20,19 @@ This milestone proves a Poseidon relation. It does not verify BLS signatures, ag
 
 See the [proof workflow](BLS_PROOF.md), [reference specification](BLS_REFERENCE.md), and [backend rationale](BLS_PROVING.md). The original Circom/Poseidon adapter remains a separately labeled legacy demo, while the real proof uses its own generated verifier and consumer.
 
-The current proof is a one-signature, fixed-message-length prototype. Batch proofs and application-level state/authorization guarantees are subsequent milestones.
+This one-signature, fixed-message-length circuit remains a reference alongside the batch implementation below.
 
 ## Milestone 3: One proof for a signed batch
 
-- Define whether messages are distinct or shared and select the aggregation scheme and rogue-key defence accordingly.
-- Verify a real aggregate signature over all active batch entries inside one proven computation.
-- Bind the proof to a canonical batch commitment, its size, authorized signer information, and chain/contract/batch context.
-- Define fixed batch capacity or a supported family of circuits and constrain padding/active entries.
-- Reject changes to any batch entry, unauthorized signers, invalid aggregates, and replayed submissions.
+**Implemented for fixed batches of two active entries with 25-byte payloads.** The [batch backend](BLS_BATCH.md) aggregates the G2 signatures and proves one Basic/min-pk multi-pairing relation over both framed messages. Position bytes guarantee that complete signed messages are distinct. No padding or caller-selected active count is supported.
 
-Concatenating independent proofs or verifying BLS off-chain without constraining its result does not meet this milestone.
+- The circuit computes the canonical SHA-256 batch commitment, including keys, payloads, size, chain ID, consumer address, and batch ID.
+- The same submission context is covered by each actual BLS signature.
+- The contract reconstructs the commitment, checks every key against current signer authorization, accepts one proof, and advances a sequential batch counter.
+- Accepted state consists of verified batch commitments; it does not claim account-state transition correctness.
+- Adversarial circuit and genuine-proof EVM tests cover changed entries/context, missing signatures, unauthorized/revoked keys, malformed proofs, and replay.
+
+The earlier Rust library's `BatchProver` remains part of the separately labeled Poseidon demo. It is not the aggregate-BLS backend. Larger or variable capacities require an explicitly constrained circuit family/design and matching verifiers; arbitrary batch sizes are not implemented.
 
 ## Milestone 4: Reproducible measurements
 

@@ -81,7 +81,7 @@ npm run bls:proof:deploy
 
 This deploys the actual generated verifier and its statement-binding consumer. The legacy `npm run deploy` continues to deploy the separate Poseidon bookkeeping demo.
 
-This consumer is stateless: it does not authorize keys, prevent replay, aggregate signatures, or prove account-state transitions. Those are subsequent roadmap items. The generated verifier is a trusted deployment dependency; its self-reported key identifier is not independent bytecode attestation.
+This consumer is stateless: it does not authorize keys, prevent replay, aggregate signatures, or prove account-state transitions. A separate [batch backend](BLS_BATCH.md) implements fixed two-entry aggregate proofs with signer authorization and replay context; account-state transitions remain subsequent work. The generated verifier is a trusted deployment dependency; its self-reported key identifier is not independent bytecode attestation.
 
 ## Validation and measurements
 

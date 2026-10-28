@@ -1,6 +1,6 @@
 # BLS12-381 reference specification
 
-This reference defines the verification behavior that the future BLS proof must reproduce. Native and direct on-chain verification are implemented. A genuine Groth16 proof is also implemented for the first 25-byte-message circuit; see [BLS_PROOF.md](BLS_PROOF.md).
+This reference defines the BLS verification behavior used by the proof circuits. Native and direct on-chain verification are implemented. Genuine Groth16 proofs are implemented for the [one-signature reference](BLS_PROOF.md) and [two-entry aggregate batch](BLS_BATCH.md).
 
 ## Fixed scheme
 
@@ -19,7 +19,7 @@ The scheme follows the [CFRG BLS draft](https://datatracker.ietf.org/doc/html/dr
 
 Verification checks `e(publicKey, H(message)) = e(G1, signature)`. Both key and signature must have valid canonical encodings, lie in the correct prime-order subgroup, and differ from infinity. The DST is fixed in code; a JSON statement selecting another suite is rejected.
 
-There is no aggregate-verification API yet. If Basic aggregate verification is added, messages must be distinct as required by the scheme. Shared-message aggregation would require a different, explicitly specified rogue-key defence and suite.
+The Rust/direct-Solidity reference APIs below verify individual signatures. The [batch proof backend](BLS_BATCH.md) verifies a Basic aggregate over distinct framed messages; its fixed position bytes enforce that requirement. Shared-message aggregation would require a different, explicitly specified rogue-key defence and suite.
 
 ## Native Rust reference
 
