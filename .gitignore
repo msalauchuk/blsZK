@@ -1,0 +1,44 @@
+/.idea/
+/node_modules/
+/target/
+cache/
+artifacts/
+deployments/
+.env
+*.json
+*.log
+
+
+
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# Environment variables
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+
+typechain/
+typechain-types/
+
+# Circuit files (se generati)
+/circuits/**/*.zkey
+/circuits/**/*.ptau
+/circuits/**/*.r1cs
+/circuits/**/*.sym
+/circuits/**/*.wasm
+/circuits/**/witness.wtns
+/circuits/**/*.json
