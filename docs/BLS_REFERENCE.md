@@ -1,6 +1,6 @@
 # BLS12-381 reference specification
 
-This reference defines the verification behavior that the future BLS proof must reproduce. Native and direct on-chain verification are implemented; a ZK proof of BLS verification is still pending.
+This reference defines the verification behavior that the future BLS proof must reproduce. Native and direct on-chain verification are implemented. A genuine Groth16 proof is also implemented for the first 25-byte-message circuit; see [BLS_PROOF.md](BLS_PROOF.md).
 
 ## Fixed scheme
 
@@ -53,7 +53,7 @@ The contract computes SHA-256 XMD expansion and hash-to-field itself. It uses MO
 
 Invalid point lengths or infinity return `false`. Pairing failures return `false`. Required hash-to-curve precompile failures revert, including empty responses on an unsupported fork. Gas forwarded to curve precompiles is bounded.
 
-This reference has no signer registry, replay policy, account state, batch commitment, or rollup integration. Applications must define their signed message encoding and authorization separately. The current Groth16 adapter is still only a Poseidon demo adapter.
+This reference has no signer registry, replay policy, account state, batch commitment, or rollup integration. Applications must define their signed message encoding and authorization separately. The legacy adapter remains a Poseidon demo. The [real BLS proof consumer](../contracts/BLSProofVerifier.sol) is a separate implementation for the supported one-signature circuit.
 
 ## Validation
 

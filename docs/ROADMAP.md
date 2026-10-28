@@ -16,17 +16,11 @@ This milestone proves a Poseidon relation. It does not verify BLS signatures, ag
 
 ## Milestone 2: One real BLS signature
 
-**In progress.** The signature suite and native reference are implemented. A direct Solidity verifier also computes hash-to-curve and checks the BLS pairing equation using EIP-2537. Rust, Solidity, and an independent JavaScript library agree on valid/invalid cases. See the [BLS reference specification](BLS_REFERENCE.md).
+**Implemented for the first 25-byte-message circuit.** The selected Basic/min-pk BLS12-381 suite has native and direct Solidity references, a full gnark circuit, a genuine BN254 Groth16 proof, native proof verification, and local Ethereum VM acceptance/rejection tests. The signature is private; the public key and all message bytes are bound on-chain.
 
-**Remaining:** execute the BLS predicate inside a proven computation and verify that proof on Ethereum. The existing Groth16 circuit still proves the Poseidon demo relation. The [proving-backend assessment](BLS_PROVING.md) documents the next implementation decision.
+See the [proof workflow](BLS_PROOF.md), [reference specification](BLS_REFERENCE.md), and [backend rationale](BLS_PROVING.md). The original Circom/Poseidon adapter remains a separately labeled legacy demo, while the real proof uses its own generated verifier and consumer.
 
-1. Pin the signature curve, G1/G2 orientation, message encoding, hash-to-curve suite, domain separation, and serialization. The BLS signature curve and outer Groth16 curve are separate choices.
-2. Establish a native reference implementation and valid/invalid test vectors.
-3. Evaluate a complete verification gadget or alternative proving backend before committing to in-circuit pairing implementation. Calling a native verifier outside the proven computation is insufficient.
-4. Prove signature verification, including point/subgroup validation and the hash-to-curve computation (or explicitly defined, securely bound preprocessing).
-5. Test on Ethereum: correct signature succeeds; changed message, key, signature, or proof fails.
-
-Success means one actual signature is covered by the proof verified on-chain. The demo adapter and circuit should then be replaced rather than relabeled as BLS.
+The current proof is a one-signature, fixed-message-length prototype. Batch proofs and application-level state/authorization guarantees are subsequent milestones.
 
 ## Milestone 3: One proof for a signed batch
 

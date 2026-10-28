@@ -18,7 +18,12 @@
     "test:proof": "npm run circuit:compile && npm run circuit:prove && cargo build --locked && hardhat test integration/ProofPipeline.test.js",
     "full:setup": "npm run circuit:compile && npm run prover:build && npm run compile",
     "coverage": "hardhat coverage",
-    "test:bls": "cargo test --locked --lib bls:: && cargo build --locked --bin bls-reference && hardhat test test/BLS12381Verifier.test.js integration/BLSReference.test.js"
+    "test:bls": "cargo test --locked --lib bls:: && cargo build --locked --bin bls-reference && hardhat test test/BLS12381Verifier.test.js integration/BLSReference.test.js",
+    "bls:proof:inspect": "bash scripts/bls_proof.sh inspect",
+    "bls:proof:setup": "bash scripts/bls_proof.sh setup",
+    "bls:proof:prove": "bash scripts/bls_proof.sh prove",
+    "test:bls:proof": "bash scripts/bls_proof.sh test",
+    "bls:proof:deploy": "hardhat run scripts/deploy_bls_proof.js --network localhost"
   },
   "repository": {
     "type": "git",
