@@ -8,7 +8,7 @@ use std::path::PathBuf;
 #[derive(Parser)]
 #[command(
     name = "bls-prover",
-    about = "Groth16 demo CLI (BLS verification is not yet implemented)"
+    about = "Groth16 demo CLI; use bls-reference for native BLS12-381 verification"
 )]
 struct Cli {
     #[command(subcommand)]

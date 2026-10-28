@@ -38,6 +38,7 @@ module.exports = {
 
     networks: {
         hardhat: {
+            hardfork: "prague",
             chainId: 31337,
             allowUnlimitedContractSize: true,
             gas: 30000000,

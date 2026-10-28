@@ -10,6 +10,8 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use std::time::Instant;
 
+pub mod bls;
+
 pub type ProverResult<T> = Result<T, Box<dyn Error>>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -2,11 +2,12 @@
 
 An experimental project studying BLS batch validity proofs and the trade-offs between off-chain proving and Ethereum verification.
 
-**Current milestone:** a working Circom → snarkjs → Rust CLI → Solidity pipeline for a **Poseidon demo relation**. Real BLS signature verification, signature aggregation, and proven rollup state transitions are still to be implemented. The demo does not establish BLS security or the presentation's performance claims.
+**Current status:** a working Circom → snarkjs → Rust CLI → Solidity pipeline for a **Poseidon demo relation**, plus real **BLS12-381 reference verification** in Rust and Solidity. BLS verification inside a ZK proof, signature aggregation, and proven rollup state transitions remain to be implemented. The Groth16 demo does not establish BLS security or the presentation's performance claims.
 
 ## Why use this project?
 
 - Generate and verify actual Groth16 proofs on BN254, including on a local EVM.
+- Verify actual BLS12-381 signatures natively and through Ethereum precompiles, with independent interoperability and rejection tests.
 - Build circuit artifacts with a pinned local Circom compiler and compile contracts with a pinned Solidity compiler.
 - Use a Rust CLI for artifact loading, proving, verification, Solidity calldata export, and demo timing.
 - Test sequencer access control and submission bookkeeping separately from cryptographic verification.
@@ -18,6 +19,7 @@ An experimental project studying BLS batch validity proofs and the trade-offs be
 
 - Node.js 22 or newer and npm 9 or newer. Node.js 22 is recorded in [.nvmrc](.nvmrc).
 - Rust and Cargo supporting the Rust 2021 edition; no minimum Rust version is pinned.
+- A C compiler such as Clang or GCC for the `blst` Rust dependency.
 - A Bash-compatible shell. No global Circom or snarkjs installation is required.
 
 ```sh
@@ -44,12 +46,29 @@ Run these from the repository root:
 | `npm run circuit:prove -- /path/to/input.json` | Prove a supplied input file without replacing it |
 | `npm run prover:build` | Build the Rust CLI in release mode |
 | `npm run full:setup` | Generate circuit artifacts and build the release CLI and Solidity contracts |
-| `npm test` | Run rollup bookkeeping tests with a mock verifier |
+| `npm test` | Run mock bookkeeping tests and direct Solidity BLS tests |
 | `npm run test:proof` | Build prerequisites and test real proofs across Rust, snarkjs, and Solidity |
-| `cargo test --locked` | Run Rust parser, artifact-loading, and CLI validation tests |
+| `npm run test:bls` | Build the native reference and test real BLS verification across Rust, JavaScript, and Solidity; no ZK proof |
+| `cargo test --locked` | Run native BLS, parser, artifact-loading, and CLI validation tests |
 | `cargo clippy --all-targets --locked -- -D warnings` | Check Rust code for warnings |
 | `npm run prover:bench` | Time repeated proofs of the same satisfying demo fixture; run `circuit:prove` first |
-| `REPORT_GAS=true npm test` | Report mock bookkeeping gas, excluding real proof verification |
+| `REPORT_GAS=true npm test` | Gas reporting for the standard tests; no ZK/BLS savings comparison |
+
+### Real BLS reference verification
+
+The selected scheme is BLS12-381 Basic/min-pk: 48-byte compressed G1 public keys, 96-byte compressed G2 signatures, and the fixed `BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_NUL_` ciphersuite. Message bytes are hashed to G2 with SHA-256 XMD and the RFC 9380 mapping. Infinity and invalid/non-subgroup points are rejected.
+
+```sh
+npm run test:bls
+cargo run --locked --bin bls-reference -- verify \
+  --input test/fixtures/bls12_381_basic.json
+```
+
+Use `bls-reference fixture` to generate deterministic statements signed with a publicly known test key. Its `--message` argument is UTF-8 text; the verification JSON accepts arbitrary hex-encoded message bytes. These fixtures are not wallet keys.
+
+[BLS12381Verifier](contracts/BLS12381Verifier.sol) verifies signatures directly using Prague's EIP-2537 precompiles. It computes hash-to-curve from the raw message inside the contract. Its EIP-2537 point encoding differs from compressed Rust/JSON input. See the [reference specification](docs/BLS_REFERENCE.md) for formats and examples.
+
+This verifier is a reference/baseline, and is not connected to the rollup's Groth16 verifier interface. A proof of this BLS computation remains the next milestone; see the [backend assessment](docs/BLS_PROVING.md).
 
 ### What the demo proves
 
@@ -126,11 +145,14 @@ The rollup still accepts a sequencer-supplied state root that is not proven by t
 | [circuits/bls_verify.circom](circuits/bls_verify.circom) | Current Poseidon demo circuit |
 | [src/lib.rs](src/lib.rs) | snarkjs orchestration and calldata parsing |
 | [src/main.rs](src/main.rs) | `bls-prover` CLI |
+| [src/bls.rs](src/bls.rs) | Native BLS12-381 validation using blst |
+| [src/bin/bls-reference.rs](src/bin/bls-reference.rs) | Real BLS reference CLI |
+| [contracts/BLS12381Verifier.sol](contracts/BLS12381Verifier.sol) | Direct on-chain BLS verification with hash-to-curve |
 | [contracts/ZKRollupBLS.sol](contracts/ZKRollupBLS.sol) | Experimental submission bookkeeping and state tracking |
 | [contracts/DemoVerifierAdapter.sol](contracts/DemoVerifierAdapter.sol) | Single-tuple adapter for the demo's four public signals |
 | [contracts/test/MockBLSVerifier.sol](contracts/test/MockBLSVerifier.sol) | Configurable test double with no cryptography |
 | [scripts/](scripts/) | Development setup, fixture/proof generation, and deployment |
-| [test/](test/) | Mock-based bookkeeping tests |
+| [test/](test/) | Mock bookkeeping and direct BLS verification tests |
 | [integration/ProofPipeline.test.js](integration/ProofPipeline.test.js) | Real-proof interoperability and rejection tests |
 | [hardhat.config.js](hardhat.config.js) | Solidity compiler, local networks, and gas reporting |
 
@@ -138,7 +160,7 @@ Generated files live in `circuits/build/` and `contracts/generated/` and are ign
 
 ## Help and documentation
 
-Use the repository's **Issues** tab for questions and reproducible bug reports. Include tool versions, the command run, and its output. Read the [roadmap](docs/ROADMAP.md), [CLI source](src/main.rs), and [integration tests](integration/ProofPipeline.test.js) for scope and examples.
+Use the repository's **Issues** tab for questions and reproducible bug reports. Include tool versions, the command run, and its output. Read the [roadmap](docs/ROADMAP.md), [BLS reference](docs/BLS_REFERENCE.md), [CLI source](src/main.rs), and [integration tests](integration/ProofPipeline.test.js) for scope and examples.
 
 Upstream references: [Circom](https://github.com/iden3/circom), [circom2 WASM compiler](https://github.com/antimatter15/circom), [snarkjs](https://github.com/iden3/snarkjs), and [Hardhat 2](https://v2.hardhat.org/hardhat-runner/docs/getting-started).
 

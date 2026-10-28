@@ -3,7 +3,8 @@ name = "bls-zk-prover"
 version = "1.0.0"
 authors = ["ZK-Rollup"]
 edition = "2021"
-description = "snarkjs prover orchestration for the blsZK experimental pipeline"
+default-run = "bls-prover"
+description = "Groth16 demo orchestration and native BLS12-381 reference verification"
 license = "MIT"
 
 [lib]
@@ -20,6 +21,7 @@ serde_json = "1.0"
 hex = "0.4"
 clap = { version = "4.0", features = ["derive"] }
 tempfile = "3.23"
+blst = "=0.3.17"
 
 [profile.release]
 opt-level = 3

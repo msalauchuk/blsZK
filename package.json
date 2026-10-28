@@ -1,7 +1,7 @@
 {
   "name": "zk-rollup-bls",
   "version": "1.0.0",
-  "description": "Experimental BLS validity-proof project with a working Groth16 Poseidon demo pipeline",
+  "description": "Experimental Groth16 pipeline with native and on-chain BLS12-381 reference verification",
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
@@ -17,7 +17,8 @@
     "prover:bench": "cargo run --locked --release --bin bls-prover -- benchmark -i 10",
     "test:proof": "npm run circuit:compile && npm run circuit:prove && cargo build --locked && hardhat test integration/ProofPipeline.test.js",
     "full:setup": "npm run circuit:compile && npm run prover:build && npm run compile",
-    "coverage": "hardhat coverage"
+    "coverage": "hardhat coverage",
+    "test:bls": "cargo test --locked --lib bls:: && cargo build --locked --bin bls-reference && hardhat test test/BLS12381Verifier.test.js integration/BLSReference.test.js"
   },
   "repository": {
     "type": "git",
@@ -38,6 +39,7 @@
   "author": "ZK-Rollup",
   "license": "MIT",
   "devDependencies": {
+    "@noble/curves": "1.9.7",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.0",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.10",
@@ -51,10 +53,10 @@
     "chai": "^4.3.10",
     "circom2": "0.2.23",
     "circomlibjs": "0.1.7",
-    "solc": "0.8.20",
     "ethers": "^6.9.0",
     "hardhat": "^2.19.2",
     "hardhat-gas-reporter": "^1.0.9",
+    "solc": "0.8.20",
     "solidity-coverage": "^0.8.5",
     "ts-node": ">=8.0.0",
     "typechain": "^8.3.0",
