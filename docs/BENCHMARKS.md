@@ -1,12 +1,14 @@
 # Comparing direct BLS and ZK verification
 
+The benchmark compares the L1 gas costs and off-chain resource use of direct BLS verification and verification through a Groth16 proof. Each run records its date, hardware, software, and EVM fork. Historical gas-budget models are documented separately in the [measurement assumptions](ROADMAP.md#measurement-assumptions).
+
 The comparison runner measures **the same fixed batch of two entries** through three implemented verification paths:
 
 1. Two individual BLS12-381 signature checks.
 2. One Basic aggregate BLS check, with two message hashes and one three-pair pairing.
 3. One genuine Groth16 proof of aggregate BLS verification.
 
-Direct checks use the [Prague EIP-2537 precompiles](https://eips.ethereum.org/EIPS/eip-2537). The [research consumer](../contracts/benchmarks/BLSBatchBenchmark.sol) inherits the actual ZK submission path and adds direct alternatives. It uses shared preparation and acceptance helpers from [BLSBatchVerifier](../contracts/BLSBatchVerifier.sol).
+Direct checks use the [Prague EIP-2537 precompiles](https://eips.ethereum.org/EIPS/eip-2537). The [benchmark contract](../contracts/benchmarks/BLSBatchBenchmark.sol) inherits the actual ZK submission path and adds direct alternatives. It uses shared preparation and acceptance helpers from [BLSBatchVerifier](../contracts/BLSBatchVerifier.sol).
 
 ## Run
 

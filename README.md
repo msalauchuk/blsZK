@@ -1,8 +1,10 @@
 # blsZK
 
-An experimental project proving BLS signature validity off-chain and checking the resulting Groth16 proof on Ethereum.
+blsZK verifies BLS signature batches off-chain and submits a Groth16 proof to Ethereum. It combines BLS12-381 signature aggregation, gnark circuits, and Solidity verification to compare L1 gas costs with direct on-chain BLS verification.
 
-**Working milestone:** one BN254 Groth16 proof verifies an aggregate of **two BLS12-381 Basic/min-pk signatures** inside a gnark circuit. Each entry carries a **25-byte payload**, signed together with its chain, contract, batch number, size, and position. The Solidity consumer checks authorized keys, rejects replayed batches, and records a verified batch commitment. Account-state transitions remain to be implemented. The earlier one-signature proof is retained as a separate reference.
+The current circuit verifies an aggregate of two BLS12-381 Basic/min-pk signatures in one BN254 Groth16 proof. Each entry carries a 25-byte payload, signed together with its chain, contract, batch number, size, and position. The Solidity consumer checks authorized keys, rejects replayed batches, and records a verified batch commitment. It does not execute payloads or prove account-state transitions. The earlier one-signature proof is retained as a separate reference.
+
+The repository includes reproducible benchmarks, tests, and local deployment scripts. See the [benchmark guide](docs/BENCHMARKS.md) for measurements and the [roadmap](docs/ROADMAP.md) for completed milestones and possible extensions.
 
 ## Why use this project?
 
@@ -136,7 +138,7 @@ The library's `BatchProver` still generates independent proofs sequentially; con
 | [contracts/BLS12381Verifier.sol](contracts/BLS12381Verifier.sol) | Direct on-chain BLS baseline |
 | [circuits/bls_verify.circom](circuits/bls_verify.circom) | Legacy Poseidon demo |
 | [src/lib.rs](src/lib.rs), [src/main.rs](src/main.rs) | Legacy snarkjs orchestration/CLI and reference module exports |
-| [contracts/ZKRollupBLS.sol](contracts/ZKRollupBLS.sol) | Experimental bookkeeping/state tracking |
+| [contracts/ZKRollupBLS.sol](contracts/ZKRollupBLS.sol) | Legacy batch bookkeeping and state-root storage |
 | [scripts/](scripts/) | Setup, proving, and deployment workflows |
 | [test/](test/), [integration/](integration/) | Reference, mock bookkeeping, and proof tests |
 
